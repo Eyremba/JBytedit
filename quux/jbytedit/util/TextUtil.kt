@@ -1,0 +1,42 @@
+package quux.jbytedit.util
+
+import java.util.regex.Pattern
+
+object TextUtil {
+
+    val patterns = arrayOf(
+        Pattern.compile("&"),
+        Pattern.compile("<"),
+        Pattern.compile(">")
+    )
+    val replacements = arrayOf(
+        "&amp;",
+        "&lt;",
+        "&gt;"
+    )
+
+    fun escapeHTML(input: String): String {
+        var result = input
+        for (i in 1 .. patterns.size - 1)
+            result = patterns[i].matcher(result).replaceAll(replacements[i]);
+        return result;
+    }
+
+    fun toHtml(str: String?) : String {
+        return "<html>" + str
+    }
+
+    fun addTag(str: String?, tag: String?): String{
+        return "<$tag>$str</${tag?.split(" ")?.first()}>"
+        //return "<font color=$color>$str</font>"
+    }
+
+    fun toLighter(str: String?): String{
+        return toHtml(addTag(addTag(str, "font color=#999999"), "i"))
+    }
+
+    fun toBold(str: String?): String{
+        return toHtml(addTag(str, "b"))
+    }
+
+}
