@@ -49,7 +49,7 @@ object OpUtil {
     val resolvedLabels = HashMap<Int, Int>()
     var labelCount = 0
 
-    fun resetLabels(){
+    fun resetLabels() {
         resolvedLabels.clear()
         labelCount = 0
     }
@@ -65,50 +65,38 @@ object OpUtil {
         var tmpArg = ""
         var argSuffix = ""
         var isFullyQualifiedClass = false
-        for (char in rawType.toCharArray()){
-            if (isFullyQualifiedClass){
-                if (char == ';'){
+        for (char in rawType.toCharArray()) {
+            if (isFullyQualifiedClass) {
+                if (char == ';') {
                     result += tmpArg.split("/").last() + argSuffix + ", "
                     argSuffix = ""
                     isFullyQualifiedClass = false
                     tmpArg = ""
-                }
-                else {
+                } else {
                     tmpArg += char
                 }
-            }
-            else if (char == '['){
+            } else if (char == '[') {
                 argSuffix += "[]"
-            }
-            else if (char == 'L'){
+            } else if (char == 'L') {
                 isFullyQualifiedClass = true
-            }
-            else {
-                if (char == 'Z'){
+            } else {
+                if (char == 'Z') {
                     result += "boolean"
-                }
-                else if (char == 'B'){
+                } else if (char == 'B') {
                     result += "byte"
-                }
-                else if (char == 'C'){
+                } else if (char == 'C') {
                     result += "char"
-                }
-                else if (char == 'S'){
+                } else if (char == 'S') {
                     result += "short"
-                }
-                else if (char == 'I'){
+                } else if (char == 'I') {
                     result += "int"
-                }
-                else if (char == 'J'){
+                } else if (char == 'J') {
                     result += "long"
-                }
-                else if (char == 'F'){
+                } else if (char == 'F') {
                     result += "float"
-                }
-                else if (char == 'D'){
+                } else if (char == 'D') {
                     result += "double"
-                }
-                else {
+                } else {
                     isFullyQualifiedClass = true
                     continue
                 }
@@ -119,94 +107,88 @@ object OpUtil {
             }
         }
 
-        if (tmpArg.length != 0){
+        if (tmpArg.length != 0) {
             result += tmpArg.split("/").last() + argSuffix + ", "
         }
 
-        if (result.length >= 2){
+        if (result.length >= 2) {
             result = result.substring(0, result.lastIndex - 1)
         }
         return TextUtil.addTag(result, "font color=#557799")
     }
 
-    fun getDisplayAccess(access: Int): String{
+    fun getDisplayAccess(access: Int): String {
         var result = ""
-        if (access and Opcodes.ACC_PUBLIC != 0){
+        if (access and Opcodes.ACC_PUBLIC != 0) {
             result += "public "
         }
-        if (access and Opcodes.ACC_PRIVATE != 0){
+        if (access and Opcodes.ACC_PRIVATE != 0) {
             result += "private "
         }
-        if (access and Opcodes.ACC_PROTECTED != 0){
+        if (access and Opcodes.ACC_PROTECTED != 0) {
             result += "protected "
         }
-        if (access and Opcodes.ACC_STATIC != 0){
+        if (access and Opcodes.ACC_STATIC != 0) {
             result += "static "
         }
-        if (access and Opcodes.ACC_FINAL != 0){
+        if (access and Opcodes.ACC_FINAL != 0) {
             result += "final "
         }
-        if (result.length > 0){
+        if (result.length > 0) {
             result = result.substring(0, result.lastIndex)
         }
         return result
     }
-    
-    fun getDisplayInstruction(node: AbstractInsnNode): String{
+
+    fun getDisplayInstruction(node: AbstractInsnNode): String {
         if (node is FrameNode) {
             return TextUtil.toLighter("stack frame")
-        }
-        else if (node is IincInsnNode) {
+        } else if (node is IincInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode] + " " + node.`var` + " " + node.incr)
-        }
-        else if (node is IntInsnNode) {
+        } else if (node is IntInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode] + " ${node.operand}")
-        }
-        else if (node is InvokeDynamicInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]  + " ${node.name}(${getDisplayArgs(node.desc)}) - unsupported dynamic method! ")
-        }
-        else if (node is JumpInsnNode) {
+        } else if (node is InvokeDynamicInsnNode) {
+            return TextUtil.toBold(mnemonics[node.opcode] + " ${node.name}(${getDisplayArgs(node.desc)}) - unsupported dynamic method! ")
+        } else if (node is JumpInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode] + " " + node.label.label.hashCode())
-        }
-        else if (node is LabelNode) {
+        } else if (node is LabelNode) {
             resolvedLabels.put(node.label.hashCode(), labelCount)
             labelCount++
             return TextUtil.toLighter("label " + labelCount)
 
-        }
-        else if (node is LdcInsnNode) {
+        } else if (node is LdcInsnNode) {
             if (node.cst is String)
                 return TextUtil.toBold(mnemonics[node.opcode] + " " + TextUtil.addTag("\"${node.cst}\"", "font color=#559955"))
             else
                 return TextUtil.toBold(mnemonics[node.opcode] + " ${node.cst}")
-        }
-        else if (node is LineNumberNode) {
+        } else if (node is LineNumberNode) {
             return TextUtil.toLighter("line " + node.line)
-        }
-        else if (node is LookupSwitchInsnNode) {
+        } else if (node is LookupSwitchInsnNode) {
             return TextUtil.toLighter("lookup switch")
-        }
-        else if (node is MultiANewArrayInsnNode) {
+        } else if (node is MultiANewArrayInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode] + " - unsuported MiltiArray node!")
-        }
-        else if (node is TableSwitchInsnNode) {
+        } else if (node is TableSwitchInsnNode) {
             return TextUtil.toLighter("table switch")
-        }
-        else if (node is TypeInsnNode) {
+        } else if (node is TypeInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode] + " " + getDisplayType(node.desc))
-        }
-        else if (node is VarInsnNode) {
+        } else if (node is VarInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode] + " " + node.`var`)
-        }
-        else if (node is FieldInsnNode) {
+        } else if (node is FieldInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode] + " ${getDisplayType(node.desc)} ${node.owner.split("/").last()}.${node.name}")
-        }
-        else if (node is MethodInsnNode) {
+        } else if (node is MethodInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode] + " ${TextUtil.addTag(node.owner.split("/").last(), "font color=#995555")}.${TextUtil.escapeHTML(node.name)}(${getDisplayArgs(node.desc)})")
-        }
-        else {
+        } else {
             return TextUtil.toBold(mnemonics[node.opcode])
         }
+    }
+
+
+    fun getDisplayField(field: FieldNode): String {
+        return TextUtil.toHtml(
+                OpUtil.getDisplayAccess(field.access) + " " +
+                        TextUtil.addTag(OpUtil.getDisplayType(field.desc) + " " + field.name, "b") + " = " +
+                        (if (field.value is String) TextUtil.addTag("\"${field.value}\"", "font color=#559955")
+                        else TextUtil.addTag(field.value?.toString() ?: "null", "font color=#aa5555")) + ";")
     }
 
 }

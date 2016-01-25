@@ -5,6 +5,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.TryCatchBlockNode
 import quux.jbytedit.JBytedit
+import quux.jbytedit.forge.Dialog
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
@@ -20,16 +21,15 @@ object FileUtil {
     var selectedJar: File? = null
     val classes = HashMap<String, ClassNode?>()
 
-    fun selectJar(): File?{
+    fun selectJar(): File? {
         val fileChooser = JFileChooser()
         val filter = FileNameExtensionFilter("Jar files", "jar")
         fileChooser.fileFilter = filter
         val returnVal = fileChooser.showOpenDialog(JBytedit.INSTANCE)
-        if (returnVal == JFileChooser.APPROVE_OPTION){
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
             if (fileChooser.selectedFile.extension.toLowerCase().equals("jar")) {
                 return fileChooser.selectedFile
-            }
-            else {
+            } else {
                 Dialog.error("You did not select a valid file")
             }
         }
@@ -40,17 +40,17 @@ object FileUtil {
         var output = JarOutputStream(FileOutputStream(outputFile.absolutePath + ".tmp"))
         val file = JarFile(selectedJar)
         for (entry in file.entries()) {
-            if (classes.containsKey(entry.name)){
+            if (classes.containsKey(entry.name)) {
                 val writer = ClassWriter(0)
                 val node = classes[entry.name] ?: continue
                 output.putNextEntry(JarEntry(entry.name))
-                for (method in node.methods){
-                    if (method is MethodNode){
+                for (method in node.methods) {
+                    if (method is MethodNode) {
                         val iter = method.tryCatchBlocks.iterator()
-                        while (iter.hasNext()){
+                        while (iter.hasNext()) {
                             val next = iter.next()
-                            if (next is TryCatchBlockNode){
-                                if (!method.instructions.contains(next.start) || !method.instructions.contains(next.end) || !method.instructions.contains(next.handler) || (next.start == next.end && next.end == next.handler)){
+                            if (next is TryCatchBlockNode) {
+                                if (!method.instructions.contains(next.start) || !method.instructions.contains(next.end) || !method.instructions.contains(next.handler) || (next.start == next.end && next.end == next.handler)) {
                                     iter.remove()
                                     println(entry.name)
                                 }
@@ -62,8 +62,7 @@ object FileUtil {
                 val input = writer.toByteArray()
                 output.write(input)
                 output.closeEntry()
-            }
-            else {
+            } else {
                 output.putNextEntry(entry)
                 val input = file.getInputStream(entry)
                 val bytes = ByteArray(1024)
