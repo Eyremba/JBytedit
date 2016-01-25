@@ -1,19 +1,16 @@
 package quux.jbytedit.forge
 
-import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldNode
 import org.objectweb.asm.tree.MethodNode
 import quux.jbytedit.JBytedit
 import quux.jbytedit.tree.ClassTreeNode
-import quux.jbytedit.tree.JavaTreeNode
 import quux.jbytedit.tree.MethodTreeNode
+import quux.jbytedit.util.Edit
 import quux.jbytedit.util.FileUtil
 import java.awt.GridLayout
-import java.util.*
 import java.util.jar.JarFile
 import javax.swing.*
-import javax.swing.tree.DefaultMutableTreeNode
 
 object Menu {
 
@@ -66,36 +63,28 @@ object Menu {
             if (list.selectedIndices.size == 1) {
                 val insert = JMenuItem("Insert")
                 insert.addActionListener {
-                    Dialog.insructionInserter(method, list.selectedIndex)
+                    Dialog.insertInstruction(method, list.selectedIndex)
                 }
                 popup.add(insert)
 
                 val moveUp = JMenuItem("Move Up")
                 moveUp.addActionListener {
-                    if (list.selectedIndex > 0) {
-                        val node = method.instructions[list.selectedIndex]
-                        method.instructions.remove(node)
-                        method.instructions.insertBefore(method.instructions[list.selectedIndex - 1], node)
-                        Component.instructionList(method)
-                    }
+                    Edit.moveInsnBy(-1, method.instructions, list.selectedIndex)
+                    JBytedit.INSTANCE.openMethod(method)
                 }
                 popup.add(moveUp)
 
                 val moveDown = JMenuItem("Move Down")
                 moveDown.addActionListener {
-                    if (list.selectedIndex < method.instructions.size() - 1) {
-                        val node = method.instructions[list.selectedIndex]
-                        method.instructions.remove(node)
-                        method.instructions.insert(method.instructions[list.selectedIndex], node)
-                        Component.instructionList(method)
-                    }
+                    Edit.moveInsnBy(1, method.instructions, list.selectedIndex)
+                    JBytedit.INSTANCE.openMethod(method)
                 }
                 popup.add(moveDown)
 
                 val edit = JMenuItem("Edit")
                 edit.addActionListener {
                     Dialog.instructionEditor(method, list.selectedIndex)
-                    Component.instructionList(method)
+                    JBytedit.INSTANCE.openMethod(method)
                 }
                 popup.add(edit)
             } else {
@@ -104,10 +93,8 @@ object Menu {
 
             val remove = JMenuItem("Remove")
             remove.addActionListener {
-                val insnsToRemove = ArrayList<AbstractInsnNode>()
-                list.selectedIndices.forEach { insnsToRemove.add(method.instructions[it]) }
-                insnsToRemove.forEach { method.instructions.remove(it) }
-                Component.instructionList(method)
+                Edit.removeInsns(method.instructions, list.selectedIndices)
+                JBytedit.INSTANCE.openMethod(method)
             }
             popup.add(remove)
         }
@@ -125,10 +112,8 @@ object Menu {
                 panel.add(JLabel("Are you sure you want to remove these fields?"))
                 val promptResult = JOptionPane.showConfirmDialog(list, panel, "Confirmation needed", JOptionPane.YES_NO_OPTION)
                 if (promptResult == JOptionPane.YES_OPTION) {
-                    val fieldsToRemove = ArrayList<Any?>()
-                    list.selectedIndices.forEach { fieldsToRemove.add(classNode.fields[it]) }
-                    fieldsToRemove.forEach { classNode.fields.remove(it) }
-                    Component.fieldsList(classNode)
+                    Edit.removeFields(classNode.fields, list.selectedIndices)
+                    JBytedit.INSTANCE.openClass(classNode)
                 }
             }
             popup.add(remove)
@@ -137,14 +122,14 @@ object Menu {
             val edit = JMenuItem("Edit")
             edit.addActionListener {
                 Dialog.fieldEditor(classNode, classNode.fields[list.selectedIndex] as FieldNode)
-                Component.fieldsList(classNode)
+                JBytedit.INSTANCE.openClass(classNode)
             }
             popup.add(edit)
         }
         val add = JMenuItem("Add")
         add.addActionListener {
             Dialog.fieldEditor(classNode, null)
-            Component.fieldsList(classNode)
+            JBytedit.INSTANCE.openClass(classNode)
         }
         popup.add(add)
         popup.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
@@ -162,12 +147,7 @@ object Menu {
                 panel.add(checkbox)
                 val promptResult = JOptionPane.showConfirmDialog(tree, panel, "Confirmation needed", JOptionPane.YES_NO_OPTION)
                 if (promptResult == JOptionPane.YES_OPTION)
-                    for (node in tree.selectionPaths) {
-                        val treeNode = node.lastPathComponent
-                        if (treeNode is JavaTreeNode) {
-                            treeNode.clear(checkbox.isSelected)
-                        }
-                    }
+                    Edit.clearSelected(tree, checkbox.isSelected)
             }
             popup.add(clear)
             val remove = JMenuItem("Remove")
@@ -176,12 +156,7 @@ object Menu {
                 panel.add(JLabel("Are you sure you want to remove these nodes?"))
                 val promptResult = JOptionPane.showConfirmDialog(tree, panel, "Confirmation needed", JOptionPane.YES_NO_OPTION)
                 if (promptResult == JOptionPane.YES_OPTION)
-                    for (path in tree.selectionPaths) {
-                        val node = path.lastPathComponent as DefaultMutableTreeNode
-                        if (node is JavaTreeNode) {
-                            node.remove(true)
-                        }
-                    }
+                    Edit.removeSelected(tree)
             }
             popup.add(remove)
 

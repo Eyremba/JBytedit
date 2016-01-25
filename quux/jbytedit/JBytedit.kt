@@ -13,7 +13,7 @@ import java.awt.event.WindowEvent
 import java.util.jar.JarFile
 import javax.swing.*
 
-class JBytedit : JFrame("JBytedit $version") {
+class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
 
     companion object {
         lateinit var INSTANCE: JBytedit
@@ -68,8 +68,8 @@ class JBytedit : JFrame("JBytedit $version") {
     }
 
     fun openMethod(method: MethodNode) {
-        editorPane.removeAll()
-        editorPane.add(Component.instructionList(method))
+        editorPane.viewport.removeAll()
+        editorPane.viewport.add(Component.instructionList(method))
     }
 
     fun openClass(classNode: ClassNode) {

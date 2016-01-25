@@ -24,6 +24,8 @@ class MethodTreeNode(val node: MethodNode, val parentNode: ClassTreeNode) : Java
                 node.instructions.remove(insn)
         }
 
+        node.exceptions.clear()
+
         if (node.desc.split(")")[1].startsWith("L")) {
             node.instructions.add(InsnNode(Opcodes.ACONST_NULL))
             node.instructions.add(InsnNode(Opcodes.ARETURN))
