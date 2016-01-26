@@ -14,7 +14,7 @@ import java.awt.event.WindowEvent
 import java.util.jar.JarFile
 import javax.swing.*
 
-class JBytedit : JFrame("JBytedit $version") {
+class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
 
     companion object {
         lateinit var INSTANCE: JBytedit

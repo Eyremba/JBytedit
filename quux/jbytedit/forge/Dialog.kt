@@ -2,6 +2,7 @@ package quux.jbytedit.forge
 
 import org.objectweb.asm.tree.*
 import quux.jbytedit.JBytedit
+import quux.jbytedit.util.Edit
 import quux.jbytedit.util.OpUtil
 import java.awt.BorderLayout
 import java.awt.GridLayout
@@ -75,44 +76,29 @@ object Dialog {
         val promptResult = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Add field", JOptionPane.YES_NO_OPTION)
         if (promptResult == JOptionPane.YES_OPTION) {
             try {
-                if (fieldNode != null) {
-                    fieldNode.access = Integer.parseInt(access.text)
-                    fieldNode.name = name.text
-                    fieldNode.desc = desc.text
-                    fieldNode.signature = sig.text
-                    if (value.text.length > 0) {
-                        if (desc.text.equals("Ljava/lang/String;"))
-                            fieldNode.value = value.text
-                        else if (desc.text.equals("I"))
-                            fieldNode.value = Integer.parseInt(value.text)
-                        else if (desc.text.equals("J"))
-                            fieldNode.value = java.lang.Long.parseLong(value.text)
-                        else if (desc.text.equals("F"))
-                            fieldNode.value = java.lang.Float.parseFloat(value.text)
-                        else if (desc.text.equals("D"))
-                            fieldNode.value = java.lang.Double.parseDouble(value.text)
-                        else
-                            throw Exception()
-                    } else {
-                        fieldNode.value = null
-                    }
+                val field = fieldNode ?: FieldNode(0, null, null, null, null)
+                field.access = Integer.parseInt(access.text)
+                field.name = name.text
+                field.desc = desc.text
+                field.signature = sig.text
+                if (value.text.length > 0) {
+                    if (desc.text.equals("Ljava/lang/String;"))
+                        field.value = value.text
+                    else if (desc.text.equals("I"))
+                        field.value = Integer.parseInt(value.text)
+                    else if (desc.text.equals("J"))
+                        field.value = java.lang.Long.parseLong(value.text)
+                    else if (desc.text.equals("F"))
+                        field.value = java.lang.Float.parseFloat(value.text)
+                    else if (desc.text.equals("D"))
+                        field.value = java.lang.Double.parseDouble(value.text)
+                    else
+                        throw Exception()
                 } else {
-                    if (value.text.length > 0) {
-                        if (desc.text.equals("Ljava/lang/String;"))
-                            classNode.fields.add(FieldNode(Integer.parseInt(access.text), name.text, desc.text, sig.text, value.text))
-                        else if (desc.text.equals("I"))
-                            classNode.fields.add(FieldNode(Integer.parseInt(access.text), name.text, desc.text, sig.text, Integer.parseInt(value.text)))
-                        else if (desc.text.equals("J"))
-                            classNode.fields.add(FieldNode(Integer.parseInt(access.text), name.text, desc.text, sig.text, java.lang.Long.parseLong(value.text)))
-                        else if (desc.text.equals("F"))
-                            classNode.fields.add(FieldNode(Integer.parseInt(access.text), name.text, desc.text, sig.text, java.lang.Float.parseFloat(value.text)))
-                        else if (desc.text.equals("D"))
-                            classNode.fields.add(FieldNode(Integer.parseInt(access.text), name.text, desc.text, sig.text, java.lang.Double.parseDouble(value.text)))
-                        else
-                            throw Exception()
-                    } else {
-                        classNode.fields.add(FieldNode(Integer.parseInt(access.text), name.text, desc.text, sig.text, null))
-                    }
+                    field.value = null
+                }
+                if (fieldNode == null) {
+                    classNode.fields.add(field)
                 }
             } catch (e: Exception) {
                 Dialog.error("An error occurred")
@@ -142,51 +128,11 @@ object Dialog {
 
     fun instructionEditor(method: MethodNode, index: Int) {
         val node = method.instructions[index]
-        val panel = JPanel(BorderLayout(5, 5))
-        val input = JPanel(GridLayout(0, 1))
-        val labels = JPanel(GridLayout(0, 1))
-        panel.add(labels, BorderLayout.WEST)
-        panel.add(input, BorderLayout.CENTER)
-        try {
-            if (node is FrameNode) {
-                throw UnsupportedOperationException()
-            } else if (node is IincInsnNode) {
-                Dialog.iincInsnEditor(node, method, panel, labels, input, null)
-            } else if (node is IntInsnNode) {
-                Dialog.intInsnEditor(node, method, panel, labels, input, null)
-            } else if (node is InvokeDynamicInsnNode) {
-                throw UnsupportedOperationException()
-            } else if (node is JumpInsnNode) {
-                Dialog.jumpInsnEditor(node, method, panel, labels, input, null)
-            } else if (node is LdcInsnNode) {
-                Dialog.ldcInsnEditor(node, method, panel, labels, input, null)
-            } else if (node is LineNumberNode) {
-                Dialog.lineNumberEditor(node, method, panel, labels, input, null)
-            } else if (node is LookupSwitchInsnNode) {
-                throw UnsupportedOperationException()
-            } else if (node is MultiANewArrayInsnNode) {
-                throw UnsupportedOperationException()
-            } else if (node is TableSwitchInsnNode) {
-                throw UnsupportedOperationException()
-            } else if (node is TypeInsnNode) {
-                Dialog.typeInsnEditor(node, method, panel, labels, input, null)
-            } else if (node is VarInsnNode) {
-                Dialog.varInsnEditor(node, method, panel, labels, input, null)
-            } else if (node is FieldInsnNode) {
-                Dialog.fieldInsnEditor(node, method, panel, labels, input, null)
-            } else if (node is MethodInsnNode) {
-                Dialog.methodInsnEditor(node, method, panel, labels, input, null)
-            } else if (node is InsnNode) {
-                Dialog.insnEditor(node, method, panel, labels, input, null)
-            }
-        } catch (e: UnsupportedOperationException) {
-            Dialog.error("This instruction is not yet supported")
-        } catch (e: Exception) {
-            Dialog.error("An error occurred")
-        }
+        abstractInsnEditor(node.javaClass.simpleName, node, method, true)
+
     }
 
-    fun insructionInserter(method: MethodNode, index: Int) {
+    fun insertInstruction(method: MethodNode, index: Int) {
         val position = JComboBox(arrayOf("Before", "After"))
         var type = JComboBox(OpUtil.nodeTypes)
         var panel = JPanel(BorderLayout(5, 5))
@@ -205,75 +151,76 @@ object Dialog {
             if (type.selectedItem == "LabelNode") {
                 method.instructions.insert(target, LabelNode())
             } else {
-                panel = JPanel(BorderLayout(5, 5))
-                input = JPanel(GridLayout(0, 1))
-                labels = JPanel(GridLayout(0, 1))
-                panel.add(labels, BorderLayout.WEST)
-                panel.add(input, BorderLayout.CENTER)
-                try {
-                    when (type.selectedItem) {
-                        "FrameNode" -> throw UnsupportedOperationException()
-                        "IincInsnNode" -> Dialog.iincInsnEditor(null, method, panel, labels, input, target)
-                        "IntInsnNode" -> Dialog.intInsnEditor(null, method, panel, labels, input, target)
-                        "InvokeDynamicInsnNode" -> throw UnsupportedOperationException()
-                        "JumpInsnNode" -> Dialog.jumpInsnEditor(null, method, panel, labels, input, target)
-                        "LdcInsnNode" -> Dialog.ldcInsnEditor(null, method, panel, labels, input, target)
-                        "LineNumberNode" -> Dialog.lineNumberEditor(null, method, panel, labels, input, target)
-                        "LookupSwitchInsnNode" -> throw UnsupportedOperationException()
-                        "MultiANewArrayInsnNode" -> throw UnsupportedOperationException()
-                        "TableSwitchInsnNode" -> throw UnsupportedOperationException()
-                        "TypeInsnNode" -> Dialog.typeInsnEditor(null, method, panel, labels, input, target)
-                        "VarInsnNode" -> Dialog.varInsnEditor(null, method, panel, labels, input, target)
-                        "FieldInsnNode" -> Dialog.fieldInsnEditor(null, method, panel, labels, input, target)
-                        "MethodInsnNode" -> Dialog.methodInsnEditor(null, method, panel, labels, input, target)
-                        "InsnNode" -> Dialog.insnEditor(null, method, panel, labels, input, target)
-                    }
-                } catch (e: UnsupportedOperationException) {
-                    Dialog.error("This instruction is not yet supported")
-                } catch (e: Exception) {
-                    Dialog.error("An error occurred")
-                }
+                abstractInsnEditor(type.selectedItem.toString(), target, method, false)
+                JBytedit.INSTANCE.openMethod(method)
             }
-            Component.instructionList(method)
         }
     }
 
-    fun iincInsnEditor(node: IincInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun abstractInsnEditor(type: String, node: AbstractInsnNode, method: MethodNode, edit: Boolean)
+    {
+        val panel = JPanel(BorderLayout(5, 5))
+        val input = JPanel(GridLayout(0, 1))
+        val labels = JPanel(GridLayout(0, 1))
+        panel.add(labels, BorderLayout.WEST)
+        panel.add(input, BorderLayout.CENTER)
+        try {
+            when (type) {
+                "FrameNode" -> throw UnsupportedOperationException()
+                "IincInsnNode" -> iincInsnEditor(node, method, panel, labels, input, edit)
+                "IntInsnNode" -> intInsnEditor(node, method, panel, labels, input, edit)
+                "InvokeDynamicInsnNode" -> throw UnsupportedOperationException()
+                "JumpInsnNode" -> jumpInsnEditor(node, method, panel, labels, input, edit)
+                "LdcInsnNode" -> ldcInsnEditor(node, method, panel, labels, input, edit)
+                "LineNumberNode" -> lineNumberEditor(node, method, panel, labels, input, edit)
+                "LookupSwitchInsnNode" -> throw UnsupportedOperationException()
+                "MultiANewArrayInsnNode" -> throw UnsupportedOperationException()
+                "TableSwitchInsnNode" -> throw UnsupportedOperationException()
+                "TypeInsnNode" -> typeInsnEditor(node, method, panel, labels, input, edit)
+                "VarInsnNode" -> varInsnEditor(node, method, panel, labels, input, edit)
+                "FieldInsnNode" -> fieldInsnEditor(node, method, panel, labels, input, edit)
+                "MethodInsnNode" -> methodInsnEditor(node, method, panel, labels, input, edit)
+                "InsnNode" -> insnEditor(node, method, panel, labels, input, edit)
+            }
+        } catch (e: UnsupportedOperationException) {
+            Dialog.error("This instruction is not yet supported")
+        } catch (e: Exception) {
+            Dialog.error("An error occurred")
+        }
+    }
+
+    fun iincInsnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
         labels.add(JLabel("Local variable index: "))
-        val index = JTextField()
+        val index = JTextField(if (node is IincInsnNode) node.`var`.toString() else "")
         input.add(index)
         labels.add(JLabel("Increment by: "))
-        val value = JTextField()
+        val value = JTextField(if (node is IincInsnNode) node.incr.toString() else "")
         input.add(value)
         val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Iinc Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
-            method.instructions.insert(target, IincInsnNode(Integer.parseInt(index.text), Integer.parseInt(value.text)))
+            Edit.insertOrReplaceInsn(IincInsnNode(Integer.parseInt(index.text), Integer.parseInt(value.text)), node, method.instructions, edit)
         }
     }
 
-    fun intInsnEditor(node: IntInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun intInsnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
         labels.add(JLabel("Type: "))
         val insn = JComboBox(arrayOf("bipush", "sipush", "newarray"))
         insn.selectedItem = OpUtil.mnemonics[node?.opcode ?: 0]
         input.add(insn)
         labels.add(JLabel("Operand: "))
-        val operand = JTextField(node?.operand?.toString() ?: "")
+        val operand = JTextField(if (node is IntInsnNode) node.operand.toString() else "")
         labels.add(operand)
         val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Int Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
-            if (node == null)
-                method.instructions.insert(target, IntInsnNode(opcode, Integer.parseInt(operand.text)))
-            else {
-                method.instructions.insert(node, IntInsnNode(opcode, Integer.parseInt(operand.text)))
-                method.instructions.remove(node)
-            }
+            Edit.insertOrReplaceInsn(IntInsnNode(opcode, Integer.parseInt(operand.text)), node, method.instructions, edit)
         }
     }
 
-    fun jumpInsnEditor(node: JumpInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun jumpInsnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
+        val labelInsnNode = (if (node is LabelNode) node else null)
         labels.add(JLabel("Type: "))
         val insn = JComboBox(arrayOf("ifeq", "ifne", "iflt", "ifge", "ifgt",
                 "ifle", "if_icmpeq", "if_icmpne", "if_icmplt", "if_icmpge",
@@ -283,10 +230,10 @@ object Dialog {
         input.add(insn)
         labels.add(JLabel("Label number: "))
         var count = 0
-        if (node != null)
+        if (edit)
             for (insn2 in method.instructions) {
                 if (insn2 is LabelNode) {
-                    if (insn2 == node.label) {
+                    if (insn2 == labelInsnNode?.label) {
                         break
                     }
                     count++
@@ -313,159 +260,128 @@ object Dialog {
             if (labelNode == null) {
                 throw Exception()
             } else {
-                if (node == null)
-                    method.instructions.insert(target, JumpInsnNode(opcode, labelNode))
-                else {
-                    method.instructions.insert(node, JumpInsnNode(opcode, labelNode))
-                    method.instructions.remove(node)
-                }
+                Edit.insertOrReplaceInsn(JumpInsnNode(opcode, labelNode), node, method.instructions, edit)
             }
         }
     }
 
-    fun ldcInsnEditor(node: LdcInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun ldcInsnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
         labels.add(JLabel("Type: "))
         val insn = JComboBox(arrayOf("String", "int", "float"))
         insn.selectedItem = OpUtil.mnemonics[node?.opcode ?: 0]
         input.add(insn)
         labels.add(JLabel("Value: "))
-        val value = JTextField(node?.cst?.toString() ?: "")
+        val value = JTextField(if (node is LdcInsnNode) node.cst.toString() else "")
         input.add(value)
         val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert LDC Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
-            if (node == null) {
-                when (insn.selectedItem as String) {
-                    "String" -> method.instructions.insert(target, LdcInsnNode(value.text))
-                    "int" -> method.instructions.insert(target, LdcInsnNode(Integer.parseInt(value.text)))
-                    "float" -> method.instructions.insert(target, LdcInsnNode(java.lang.Float.parseFloat(value.text)))
-                }
-            } else {
-                when (insn.selectedItem as String) {
-                    "String" -> method.instructions.insert(node, LdcInsnNode(value.text))
-                    "int" -> method.instructions.insert(node, LdcInsnNode(Integer.parseInt(value.text)))
-                    "float" -> method.instructions.insert(node, LdcInsnNode(java.lang.Float.parseFloat(value.text)))
-                }
-                method.instructions.remove(node)
+            when (insn.selectedItem as String) {
+                "String" -> Edit.insertOrReplaceInsn(LdcInsnNode(value.text), node, method.instructions, edit)
+                "int" -> Edit.insertOrReplaceInsn(LdcInsnNode(Integer.parseInt(value.text)), node, method.instructions, edit)
+                "float" -> Edit.insertOrReplaceInsn(LdcInsnNode(java.lang.Float.parseFloat(value.text)), node, method.instructions, edit)
             }
         }
     }
 
-    fun lineNumberEditor(node: LineNumberNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun lineNumberEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
+        val lineNode = if (node is LineNumberNode) node else null
         labels.add(JLabel("Line number: "))
-        var value = JTextField(node?.line?.toString() ?: "")
+        var value = JTextField(lineNode?.line?.toString() ?: "")
         input.add(value)
         val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Line Number",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             val label = LabelNode()
-            if (node == null) {
-                method.instructions.insert(target, LineNumberNode(Integer.parseInt(value.text), label))
-                method.instructions.insert(target, label)
+            if (!edit) {
+                method.instructions.insert(node, LineNumberNode(Integer.parseInt(value.text), label))
+                method.instructions.insert(node, label)
             } else {
-                node.line = Integer.parseInt(value.text)
+                lineNode?.line = Integer.parseInt(value.text)
             }
         }
     }
 
-    fun typeInsnEditor(node: TypeInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun typeInsnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
         labels.add(JLabel("Instruction: "))
         val insn = JComboBox(arrayOf("new", "anewarray", "checkcast", "instanceof"))
         insn.selectedItem = OpUtil.mnemonics[node?.opcode ?: 0]
         input.add(insn)
         labels.add(JLabel("Type description: "))
-        val desc = JTextField(node?.desc ?: "")
+        val desc = JTextField(if (node is TypeInsnNode) node.desc else "")
         input.add(desc)
         val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Type Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
-            if (node == null)
-                method.instructions.insert(target, TypeInsnNode(opcode, desc.text))
-            else {
-                method.instructions.insert(node, TypeInsnNode(opcode, desc.text))
-                method.instructions.remove(node)
-            }
+            Edit.insertOrReplaceInsn(TypeInsnNode(opcode, desc.text), node, method.instructions, edit)
         }
     }
 
-    fun varInsnEditor(node: VarInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun varInsnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
         labels.add(JLabel("Type: "))
         val insn = JComboBox(arrayOf("iload", "lload", "fload", "dload",
                 "aload", "istore", "lstore", "fstore", "dstore", "astore", "ret"))
         insn.selectedItem = OpUtil.mnemonics[node?.opcode ?: 0]
         input.add(insn)
         labels.add(JLabel("Local variable index: "))
-        val index = JTextField(node?.`var`?.toString() ?: "")
+        val index = JTextField(if (node is VarInsnNode) node.`var`.toString() else "")
         input.add(index)
         val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Var Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
-            if (node == null)
-                method.instructions.insert(target, VarInsnNode(opcode, Integer.parseInt(index.text)))
-            else {
-                method.instructions.insert(node, VarInsnNode(opcode, Integer.parseInt(index.text)))
-                method.instructions.remove(node)
-            }
+            Edit.insertOrReplaceInsn(VarInsnNode(opcode, Integer.parseInt(index.text)), node, method.instructions, edit)
         }
     }
 
-    fun fieldInsnEditor(node: FieldInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun fieldInsnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
+        val fieldInsnNode = if (node is FieldInsnNode) node else null
         labels.add(JLabel("Type: "))
         val insn = JComboBox(arrayOf("getstatic", "putstatic", "getfield", "putfield"))
         insn.selectedItem = OpUtil.mnemonics[node?.opcode ?: 0]
         input.add(insn)
         labels.add(JLabel("Owner: "))
-        val owner = JTextField(node?.owner ?: "")
+        val owner = JTextField(fieldInsnNode?.owner ?: "")
         input.add(owner)
         labels.add(JLabel("Name: "))
-        val name = JTextField(node?.name ?: "")
+        val name = JTextField(fieldInsnNode?.name ?: "")
         input.add(name)
         labels.add(JLabel("Description: "))
-        val desc = JTextField(node?.desc ?: "")
+        val desc = JTextField(fieldInsnNode?.desc ?: "")
         input.add(desc)
         val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Field Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
-            if (node == null)
-                method.instructions.insert(target, FieldInsnNode(opcode, owner.text, name.text, desc.text))
-            else {
-                method.instructions.insert(node, FieldInsnNode(opcode, owner.text, name.text, desc.text))
-                method.instructions.remove(node)
-            }
+            Edit.insertOrReplaceInsn(FieldInsnNode(opcode, owner.text, name.text, desc.text), node, method.instructions, edit)
         }
     }
 
-    fun methodInsnEditor(node: MethodInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun methodInsnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
+        val methodNode = if (node is MethodInsnNode) node else null
         labels.add(JLabel("Type: "))
         val insn = JComboBox(arrayOf("invokestatic", "invokevirtual", "invokespecial", "invokeinterface"))
         insn.selectedItem = OpUtil.mnemonics[node?.opcode ?: 0]
         input.add(insn)
         labels.add(JLabel("Owner: "))
-        val owner = JTextField(node?.owner ?: "")
+        val owner = JTextField(methodNode?.owner ?: "")
         input.add(owner)
         labels.add(JLabel("Name: "))
-        val name = JTextField(node?.name ?: "")
+        val name = JTextField(methodNode?.name ?: "")
         input.add(name)
         labels.add(JLabel("Description: "))
-        val desc = JTextField(node?.desc ?: "")
+        val desc = JTextField(methodNode?.desc ?: "")
         input.add(desc)
         val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Method Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
-            if (node == null)
-                method.instructions.insert(target, MethodInsnNode(opcode, owner.text, name.text, desc.text))
-            else {
-                method.instructions.insert(node, MethodInsnNode(opcode, owner.text, name.text, desc.text))
-                method.instructions.remove(node)
-            }
+            Edit.insertOrReplaceInsn(MethodInsnNode(opcode, owner.text, name.text, desc.text), node, method.instructions, edit)
         }
     }
 
-    fun insnEditor(node: InsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, target: AbstractInsnNode?) {
+    fun insnEditor(node: AbstractInsnNode?, method: MethodNode, panel: JPanel, labels: JPanel, input: JPanel, edit: Boolean) {
         labels.add(JLabel("Type: "))
         val insn = JComboBox(arrayOf("nop", "aconst_null", "iconst_m1",
                 "iconst_0", "iconst_1", "iconst_2", "iconst_3", "iconst_4",
@@ -491,12 +407,7 @@ object Dialog {
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
-            if (node == null)
-                method.instructions.insert(target, InsnNode(opcode))
-            else {
-                method.instructions.insert(node, InsnNode(opcode))
-                method.instructions.remove(node)
-            }
+            Edit.insertOrReplaceInsn(InsnNode(opcode), node, method.instructions, edit)
         }
     }
 
