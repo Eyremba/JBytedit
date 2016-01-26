@@ -6,8 +6,6 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldNode
 import org.objectweb.asm.tree.MethodNode
 import quux.jbytedit.JBytedit
-import quux.jbytedit.decrypt.ZKMDecrypter
-import quux.jbytedit.entry.SearchEntry
 import quux.jbytedit.render.CustomTreeRenderer
 import quux.jbytedit.tree.ClassTreeNode
 import quux.jbytedit.tree.DirectoryTreeNode
@@ -137,6 +135,7 @@ object Component {
         return list
     }
 
+    /*
     fun zkmResult(classes : MutableCollection<ClassNode?>): JList<SearchEntry>{
 
         val results = Vector<SearchEntry>()
@@ -168,4 +167,5 @@ object Component {
         return list
 
     }
+    */
 }

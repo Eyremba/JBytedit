@@ -17,6 +17,12 @@ object Dialog {
                 JOptionPane.ERROR_MESSAGE)
     }
 
+    fun confirm(message: String): Boolean {
+        return JOptionPane.showConfirmDialog(quux.jbytedit.JBytedit.INSTANCE,
+                message,
+                "Confirmation needed", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION
+    }
+
     fun methodEditor(node: MethodNode) {
         val panel = JPanel(BorderLayout(5, 5))
         val input = JPanel(GridLayout(0, 1))

@@ -58,6 +58,7 @@ object FileUtil {
                         }
                     }
                 }
+                println(node.name)
                 node.accept(writer)
                 val input = writer.toByteArray()
                 output.write(input)

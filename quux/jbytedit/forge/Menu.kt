@@ -4,6 +4,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldNode
 import org.objectweb.asm.tree.MethodNode
 import quux.jbytedit.JBytedit
+import quux.jbytedit.decrypt.ZKMDecrypter
 import quux.jbytedit.entry.SearchEntry
 import quux.jbytedit.tree.ClassTreeNode
 import quux.jbytedit.tree.MethodTreeNode
@@ -24,10 +25,7 @@ object Menu {
         val open = JMenuItem("Open")
         open.addActionListener {
             if (FileUtil.selectedJar != null) {
-                val promptResult = JOptionPane.showConfirmDialog(quux.jbytedit.JBytedit.INSTANCE,
-                        "Are you sure you want to open a new JAR file?\nAll unsaved changes will be lost",
-                        "Confirmation needed", JOptionPane.YES_NO_OPTION)
-                if (promptResult == JOptionPane.NO_OPTION) {
+                if (Dialog.confirm("Are you sure you want to open a new JAR file?\nAll unsaved changes will be lost")) {
                     return@addActionListener
                 }
             }
@@ -60,7 +58,7 @@ object Menu {
 
         val zkmDecrypt = JMenuItem("Decrypt ZKM")
         zkmDecrypt.addActionListener {
-            JBytedit.INSTANCE.openResults(Component.zkmResult(FileUtil.classes.values))
+            ZKMDecrypter.decryptClasses(FileUtil.classes.values)
         }
         tools.add(zkmDecrypt)
 
@@ -118,10 +116,7 @@ object Menu {
 
             val remove = JMenuItem("Remove")
             remove.addActionListener {
-                var panel = JPanel(GridLayout(0, 1))
-                panel.add(JLabel("Are you sure you want to remove these fields?"))
-                val promptResult = JOptionPane.showConfirmDialog(list, panel, "Confirmation needed", JOptionPane.YES_NO_OPTION)
-                if (promptResult == JOptionPane.YES_OPTION) {
+                if (Dialog.confirm("Are you sure you want to remove these fields?")) {
                     Edit.removeFields(classNode.fields, list.selectedIndices)
                     JBytedit.INSTANCE.openClass(classNode)
                 }
@@ -162,10 +157,7 @@ object Menu {
             popup.add(clear)
             val remove = JMenuItem("Remove")
             remove.addActionListener {
-                var panel = JPanel(GridLayout(0, 1))
-                panel.add(JLabel("Are you sure you want to remove these nodes?"))
-                val promptResult = JOptionPane.showConfirmDialog(tree, panel, "Confirmation needed", JOptionPane.YES_NO_OPTION)
-                if (promptResult == JOptionPane.YES_OPTION)
+                if (Dialog.confirm("Are you sure you want to remove these nodes?"))
                     Edit.removeSelected(tree)
             }
             popup.add(remove)
