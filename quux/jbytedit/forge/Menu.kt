@@ -5,6 +5,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldNode
 import org.objectweb.asm.tree.MethodNode
 import quux.jbytedit.JBytedit
+import quux.jbytedit.entry.SearchEntry
 import quux.jbytedit.tree.ClassTreeNode
 import quux.jbytedit.tree.JavaTreeNode
 import quux.jbytedit.tree.MethodTreeNode
@@ -20,8 +21,8 @@ object Menu {
     fun topBar(): JMenuBar {
         val menuBar = JMenuBar()
 
-        val menu = JMenu("File")
-        menuBar.add(menu)
+        val fileMenu = JMenu("File")
+        menuBar.add(fileMenu)
 
         val open = JMenuItem("Open")
         open.addActionListener {
@@ -36,7 +37,7 @@ object Menu {
             FileUtil.selectedJar = FileUtil.selectJar()
             JBytedit.INSTANCE.openJar(JarFile(FileUtil.selectedJar))
         }
-        menu.add(open)
+        fileMenu.add(open)
 
         val save = JMenuItem("Save")
         save.addActionListener {
@@ -45,7 +46,7 @@ object Menu {
             else
                 FileUtil.saveJar(FileUtil.selectedJar!!)
         }
-        menu.add(save)
+        fileMenu.add(save)
 
         val saveAs = JMenuItem("Save As")
         saveAs.addActionListener {
@@ -55,7 +56,16 @@ object Menu {
             else
                 Dialog.error("You did not select a valid file")
         }
-        menu.add(saveAs)
+        fileMenu.add(saveAs)
+
+        val tools = JMenu("Tools")
+        menuBar.add(tools)
+
+        val zkmDecrypt = JMenuItem("Decrypt ZKM")
+        zkmDecrypt.addActionListener {
+            JBytedit.INSTANCE.openResults(Component.zkmResult(FileUtil.classes.values))
+        }
+        tools.add(zkmDecrypt)
 
         return menuBar
     }
@@ -203,6 +213,12 @@ object Menu {
 
             popup.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
         }
+    }
+
+    fun searchResultsPopup(list: JList<SearchEntry>) {
+        val popupMenu = JPopupMenu()
+        
+        popupMenu.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
     }
 
 }

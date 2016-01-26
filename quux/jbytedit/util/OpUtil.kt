@@ -154,7 +154,7 @@ object OpUtil {
         } else if (node is LabelNode) {
             resolvedLabels.put(node.label.hashCode(), labelCount)
             labelCount++
-            return TextUtil.toLighter("label " + labelCount)
+            return TextUtil.toLighter("label " + (labelCount - 1))
 
         } else if (node is LdcInsnNode) {
             if (node.cst is String)
@@ -189,6 +189,18 @@ object OpUtil {
                         TextUtil.addTag(OpUtil.getDisplayType(field.desc) + " " + field.name, "b") + " = " +
                         (if (field.value is String) TextUtil.addTag("\"${field.value}\"", "font color=#559955")
                         else TextUtil.addTag(field.value?.toString() ?: "null", "font color=#aa5555")) + ";")
+    }
+
+    fun getIntValue(insn: AbstractInsnNode): Int {
+        if (insn.opcode == Opcodes.ICONST_0) { return 0 }
+        else if (insn.opcode == Opcodes.ICONST_M1) { return -1 }
+        else if (insn.opcode == Opcodes.ICONST_1) { return 1 }
+        else if (insn.opcode == Opcodes.ICONST_2) { return 2 }
+        else if (insn.opcode == Opcodes.ICONST_3) { return 3 }
+        else if (insn.opcode == Opcodes.ICONST_4) { return 4 }
+        else if (insn.opcode == Opcodes.ICONST_5) { return 5 }
+        else if (insn is IntInsnNode){ return insn.operand }
+        else return Int.MIN_VALUE
     }
 
 }

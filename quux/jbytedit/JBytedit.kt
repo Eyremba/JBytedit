@@ -2,6 +2,7 @@ package quux.jbytedit
 
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
+import quux.jbytedit.entry.SearchEntry
 import quux.jbytedit.forge.Component
 import quux.jbytedit.forge.Menu
 import quux.jbytedit.tree.ClassTreeNode
@@ -68,12 +69,17 @@ class JBytedit : JFrame("JBytedit $version") {
     }
 
     fun openMethod(method: MethodNode) {
-        editorPane.removeAll()
-        editorPane.add(Component.instructionList(method))
+        editorPane.viewport.removeAll()
+        editorPane.viewport.add(Component.instructionList(method))
     }
 
     fun openClass(classNode: ClassNode) {
         editorPane.viewport.removeAll()
         editorPane.viewport.add(Component.fieldsList(classNode))
+    }
+
+    fun openResults(list: JList<SearchEntry>){
+        editorPane.viewport.removeAll()
+        editorPane.viewport.add(list)
     }
 }
