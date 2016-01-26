@@ -144,13 +144,13 @@ object OpUtil {
         if (node is FrameNode) {
             return TextUtil.toLighter("stack frame")
         } else if (node is IincInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " " + node.`var` + " " + node.incr)
+            return TextUtil.toBold(mnemonics[node.opcode]) + " " + node.`var` + " " + node.incr
         } else if (node is IntInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " ${node.operand}")
+            return TextUtil.toBold(mnemonics[node.opcode]) + " ${node.operand}"
         } else if (node is InvokeDynamicInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " ${node.name}(${getDisplayArgs(node.desc)}) - unsupported dynamic method! ")
+            return TextUtil.toBold(mnemonics[node.opcode]) + " ${node.name}(${getDisplayArgs(node.desc)}) - unsupported dynamic method! "
         } else if (node is JumpInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " " + node.label.label.hashCode())
+            return TextUtil.toBold(mnemonics[node.opcode]) + " " + node.label.label.hashCode()
         } else if (node is LabelNode) {
             resolvedLabels.put(node.label.hashCode(), labelCount)
             labelCount++
@@ -158,25 +158,25 @@ object OpUtil {
 
         } else if (node is LdcInsnNode) {
             if (node.cst is String)
-                return TextUtil.toBold(mnemonics[node.opcode] + " " + TextUtil.addTag("\"${node.cst}\"", "font color=#559955"))
+                return TextUtil.toBold(mnemonics[node.opcode]) + " " + TextUtil.addTag("\"${node.cst}\"", "font color=#559955")
             else
-                return TextUtil.toBold(mnemonics[node.opcode] + " ${node.cst}")
+                return TextUtil.toBold(mnemonics[node.opcode]) + " ${node.cst}"
         } else if (node is LineNumberNode) {
             return TextUtil.toLighter("line " + node.line)
         } else if (node is LookupSwitchInsnNode) {
             return TextUtil.toLighter("lookup switch")
         } else if (node is MultiANewArrayInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " - unsuported MiltiArray node!")
+            return TextUtil.toBold(mnemonics[node.opcode]) + " - unsuported MiltiArray node!"
         } else if (node is TableSwitchInsnNode) {
             return TextUtil.toLighter("table switch")
         } else if (node is TypeInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " " + getDisplayType(node.desc))
+            return TextUtil.toBold(mnemonics[node.opcode]) + " " + getDisplayType(node.desc)
         } else if (node is VarInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " " + node.`var`)
+            return TextUtil.toBold(mnemonics[node.opcode]) + " " + node.`var`
         } else if (node is FieldInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " ${getDisplayType(node.desc)} ${node.owner.split("/").last()}.${node.name}")
+            return TextUtil.toBold(mnemonics[node.opcode]) + " ${getDisplayType(node.desc)} ${node.owner.split("/").last()}.${node.name}"
         } else if (node is MethodInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode] + " ${TextUtil.addTag(node.owner.split("/").last(), "font color=#995555")}.${TextUtil.escapeHTML(node.name)}(${getDisplayArgs(node.desc)})")
+            return TextUtil.toBold(mnemonics[node.opcode]) + " ${TextUtil.addTag(node.owner.split("/").last(), "font color=#995555")}.${TextUtil.escapeHTML(node.name)}(${getDisplayArgs(node.desc)})"
         } else {
             return TextUtil.toBold(mnemonics[node.opcode])
         }
