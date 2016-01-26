@@ -35,19 +35,9 @@ object FileUtil {
     }
 
     fun saveJar(outputFile: File) {
-        var output = JarOutputStream(FileOutputStream(outputFile.absolutePath + ".tmp"))
-        val isSameFile = outputFile == selectedJar
-        var file : JarFile?
-        if (isSameFile){
-            val stream = FileOutputStream(selectedJar!!.absolutePath + ".tmp")
-            Files.copy(File(selectedJar!!.absolutePath).toPath(), stream)
-            stream.close()
-            file = JarFile(File(selectedJar!!.absolutePath + ".tmp"))
-        }
-        else {
-            file = JarFile(selectedJar)
-        }
-
+        var stream = FileOutputStream(outputFile.absolutePath + ".tmp")
+        var output = JarOutputStream(stream)
+        val file = JarFile(selectedJar)
         for (entry in file.entries()) {
             if (classes.containsKey(entry.name)) {
                 val writer = ClassWriter(0)
@@ -73,9 +63,12 @@ object FileUtil {
             }
         }
         output.close()
+        stream.close()
         file.close()
-        if (isSameFile)
-            Files.delete(File(selectedJar!!.absolutePath + ".tmp").toPath())
+        stream = FileOutputStream(outputFile)
+        Files.copy(File(outputFile.absolutePath + ".tmp").toPath(), stream)
+        stream.close()
+        Files.delete(File(outputFile.absolutePath + ".tmp").toPath())
         selectedJar = outputFile
 
     }
