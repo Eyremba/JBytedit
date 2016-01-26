@@ -135,37 +135,4 @@ object Component {
         return list
     }
 
-    /*
-    fun zkmResult(classes : MutableCollection<ClassNode?>): JList<SearchEntry>{
-
-        val results = Vector<SearchEntry>()
-
-        for (classNode in classes){
-            if (classNode != null) {
-                var i = 0
-                for (decrypted in ZKMDecrypter.decryptClass(classNode)) {
-                    results.addElement(SearchEntry(classNode.name + " - $i - $decrypted", classNode, null, null))
-                }
-            }
-        }
-
-        if (results.size == 0){
-            results.addElement(SearchEntry("No results found", null, null, null))
-        }
-
-        val list = JList(results)
-        list.font = Font(Font.SANS_SERIF, Font.PLAIN, 13)
-
-        list.addMouseListener(object : MouseAdapter() {
-            override fun mousePressed(e: MouseEvent?) {
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    //Menu.instructionsPopup(method, list)
-                }
-            }
-        })
-
-        return list
-
-    }
-    */
 }

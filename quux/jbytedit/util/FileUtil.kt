@@ -2,8 +2,6 @@ package quux.jbytedit.util
 
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.MethodNode
-import org.objectweb.asm.tree.TryCatchBlockNode
 import quux.jbytedit.JBytedit
 import quux.jbytedit.forge.Dialog
 import java.io.File
@@ -38,27 +36,24 @@ object FileUtil {
 
     fun saveJar(outputFile: File) {
         var output = JarOutputStream(FileOutputStream(outputFile.absolutePath + ".tmp"))
-        val file = JarFile(selectedJar)
+        val isSameFile = outputFile == selectedJar
+        var file : JarFile?
+        if (isSameFile){
+            val stream = FileOutputStream(selectedJar!!.absolutePath + ".tmp")
+            Files.copy(File(selectedJar!!.absolutePath).toPath(), stream)
+            stream.close()
+            file = JarFile(File(selectedJar!!.absolutePath + ".tmp"))
+        }
+        else {
+            file = JarFile(selectedJar)
+        }
+
         for (entry in file.entries()) {
             if (classes.containsKey(entry.name)) {
                 val writer = ClassWriter(0)
                 val node = classes[entry.name] ?: continue
                 output.putNextEntry(JarEntry(entry.name))
-                for (method in node.methods) {
-                    if (method is MethodNode) {
-                        val iter = method.tryCatchBlocks.iterator()
-                        while (iter.hasNext()) {
-                            val next = iter.next()
-                            if (next is TryCatchBlockNode) {
-                                if (!method.instructions.contains(next.start) || !method.instructions.contains(next.end) || !method.instructions.contains(next.handler) || (next.start == next.end && next.end == next.handler)) {
-                                    iter.remove()
-                                    println(entry.name)
-                                }
-                            }
-                        }
-                    }
-                }
-                println(node.name)
+                Edit.fixExceptionTable(node)
                 node.accept(writer)
                 val input = writer.toByteArray()
                 output.write(input)
@@ -78,8 +73,9 @@ object FileUtil {
             }
         }
         output.close()
-        Files.copy(File(outputFile.absolutePath + ".tmp").toPath(), FileOutputStream(outputFile))
-        Files.delete(File(outputFile.absolutePath + ".tmp").toPath())
+        file.close()
+        if (isSameFile)
+            Files.delete(File(selectedJar!!.absolutePath + ".tmp").toPath())
         selectedJar = outputFile
 
     }

@@ -66,6 +66,7 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
         fileTree = Component.fileTree(jar)
         treePane.viewport.removeAll()
         treePane.viewport.add(fileTree)
+        jar.close()
     }
 
     fun openMethod(method: MethodNode) {

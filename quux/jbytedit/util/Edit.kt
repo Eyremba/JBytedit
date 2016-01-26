@@ -1,13 +1,28 @@
 package quux.jbytedit.util
 
-import org.objectweb.asm.tree.AbstractInsnNode
-import org.objectweb.asm.tree.InsnList
+import org.objectweb.asm.tree.*
 import quux.jbytedit.tree.JavaTreeNode
 import java.util.*
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 
 object Edit {
+
+    fun fixExceptionTable(node: ClassNode){
+        for (method in node.methods) {
+            if (method is MethodNode) {
+                val iter = method.tryCatchBlocks.iterator()
+                while (iter.hasNext()) {
+                    val next = iter.next()
+                    if (next is TryCatchBlockNode) {
+                        if (!method.instructions.contains(next.start) || !method.instructions.contains(next.end) || !method.instructions.contains(next.handler) || (next.start == next.end && next.end == next.handler)) {
+                            iter.remove()
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     fun removeSelected(tree: JTree) {
         for (path in tree.selectionPaths) {

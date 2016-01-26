@@ -56,7 +56,7 @@ object Menu {
         val tools = JMenu("Tools")
         menuBar.add(tools)
 
-        val zkmDecrypt = JMenuItem("Decrypt ZKM")
+        val zkmDecrypt = JMenuItem("Decrypt ZKM Strings")
         zkmDecrypt.addActionListener {
             ZKMDecrypter.decryptClasses(FileUtil.classes.values)
         }

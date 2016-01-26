@@ -93,6 +93,20 @@ object ZKMDecrypter {
             }
         }
 
+        val iter = clinit.instructions.iterator()
+        var count = 0
+        while (iter.hasNext()){
+            val insn = iter.next() as AbstractInsnNode
+
+            if (count == 6)
+                break
+
+            if (insn.opcode == Opcodes.SWAP || insn.opcode == Opcodes.POP || insn is FrameNode || insn is TableSwitchInsnNode || insn is LabelNode)
+                count++
+            else count = 0
+
+            iter.remove()
+        }
 
     }
 
