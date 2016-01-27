@@ -24,15 +24,4 @@ class DirectoryTreeNode(name: String) : JavaTreeNode(name) {
         }
     }
 
-    fun getChild(name: String): DefaultMutableTreeNode? {
-        for (child in children()) {
-            if (child is DefaultMutableTreeNode) {
-                if (child.toString().equals(name)) {
-                    return child
-                }
-            }
-        }
-        return null
-    }
-
 }

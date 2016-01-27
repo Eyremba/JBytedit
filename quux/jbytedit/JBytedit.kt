@@ -24,6 +24,8 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
     val treePane = JScrollPane()
     val editorPane = JScrollPane()
     var fileTree: JTree? = null
+    var openedList: JList<Any?>? = null
+    val titleLabel: JLabel = JLabel(" ")
 
     init {
         INSTANCE = this
@@ -50,13 +52,15 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
         editorPane.preferredSize = Dimension(600, 500)
         add(editorPane, BorderLayout.CENTER)
 
+        add(titleLabel, BorderLayout.NORTH)
+
         pack()
         isVisible = true
     }
 
     fun openNode(treeNode: Any?) {
         if (treeNode is MethodTreeNode) {
-            openMethod(treeNode.node)
+            openMethod(treeNode.node, treeNode.parentNode.node)
         } else if (treeNode is ClassTreeNode) {
             openClass(treeNode.node)
         }
@@ -69,17 +73,20 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
         jar.close()
     }
 
-    fun openMethod(method: MethodNode) {
+    fun openMethod(method: MethodNode, parent: ClassNode) {
+        titleLabel.text = "Method: " + parent.name + "." + method.name + " " + method.desc
         editorPane.viewport.removeAll()
-        editorPane.viewport.add(Component.instructionList(method))
+        editorPane.viewport.add(Component.instructionList(method, parent))
     }
 
     fun openClass(classNode: ClassNode) {
+        titleLabel.text = "Class: " + classNode.name
         editorPane.viewport.removeAll()
         editorPane.viewport.add(Component.fieldsList(classNode))
     }
 
     fun openResults(list: JList<SearchEntry>){
+        titleLabel.text = "Search Results"
         editorPane.viewport.removeAll()
         editorPane.viewport.add(list)
     }

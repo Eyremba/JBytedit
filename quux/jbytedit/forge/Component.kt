@@ -6,6 +6,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldNode
 import org.objectweb.asm.tree.MethodNode
 import quux.jbytedit.JBytedit
+import quux.jbytedit.entry.SearchEntry
 import quux.jbytedit.render.CustomTreeRenderer
 import quux.jbytedit.tree.ClassTreeNode
 import quux.jbytedit.tree.DirectoryTreeNode
@@ -53,7 +54,7 @@ object Component {
                     } finally {
                         input.close()
                     }
-                    FileUtil.classes.put(entry.name, classNode)
+                    FileUtil.classes.put(entry.name.slice(0..entry.name.lastIndex - 6), classNode)
                     val treeNode = ClassTreeNode(classNode)
 
                     for (method in (classNode.methods as List<MethodNode>))
@@ -108,7 +109,7 @@ object Component {
         return list
     }
 
-    fun instructionList(method: MethodNode): JList<String> {
+    fun instructionList(method: MethodNode, parent: ClassNode): JList<String> {
 
         val instructions = Vector<String>()
 
@@ -127,11 +128,23 @@ object Component {
         list.addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent?) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    Menu.instructionsPopup(method, list)
+                    Menu.instructionsPopup(method, parent, list)
                 }
             }
         })
 
+        return list
+    }
+
+    fun resultsList(resultList: Vector<SearchEntry>): JList<SearchEntry> {
+        val list = JList(resultList)
+        list.addMouseListener(object : MouseAdapter() {
+            override fun mousePressed(e: MouseEvent?) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    Menu.searchResultPopup(list)
+                }
+            }
+        })
         return list
     }
 

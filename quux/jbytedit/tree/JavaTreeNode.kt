@@ -27,4 +27,16 @@ open class JavaTreeNode(name: String) : DefaultMutableTreeNode(name) {
         if (isTop)
             (JBytedit.INSTANCE.fileTree!!.model as DefaultTreeModel).removeNodeFromParent(this)
     }
+
+    fun getChild(name: String): DefaultMutableTreeNode? {
+        for (child in children()) {
+            if (child is DefaultMutableTreeNode) {
+                if (child.toString().equals(name)) {
+                    return child
+                }
+            }
+        }
+        return null
+    }
+
 }

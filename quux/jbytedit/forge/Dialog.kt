@@ -138,7 +138,7 @@ object Dialog {
 
     }
 
-    fun insertInstruction(method: MethodNode, index: Int) {
+    fun insertInstruction(method: MethodNode, parent: ClassNode, index: Int) {
         val position = JComboBox(arrayOf("Before", "After"))
         var type = JComboBox(OpUtil.nodeTypes)
         var panel = JPanel(BorderLayout(5, 5))
@@ -158,7 +158,7 @@ object Dialog {
                 method.instructions.insert(target, LabelNode())
             } else {
                 abstractInsnEditor(type.selectedItem.toString(), target, method, false)
-                JBytedit.INSTANCE.openMethod(method)
+                JBytedit.INSTANCE.openMethod(method, parent)
             }
         }
     }

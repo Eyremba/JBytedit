@@ -1,8 +1,6 @@
 package quux.jbytedit.forge
 
-import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.FieldNode
-import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.tree.*
 import quux.jbytedit.JBytedit
 import quux.jbytedit.decrypt.ZKMDecrypter
 import quux.jbytedit.entry.SearchEntry
@@ -11,6 +9,8 @@ import quux.jbytedit.tree.MethodTreeNode
 import quux.jbytedit.util.Edit
 import quux.jbytedit.util.FileUtil
 import java.awt.GridLayout
+import java.awt.Rectangle
+import java.util.*
 import java.util.jar.JarFile
 import javax.swing.*
 
@@ -25,7 +25,7 @@ object Menu {
         val open = JMenuItem("Open")
         open.addActionListener {
             if (FileUtil.selectedJar != null) {
-                if (Dialog.confirm("Are you sure you want to open a new JAR file?\nAll unsaved changes will be lost")) {
+                if (!Dialog.confirm("Are you sure you want to open a new JAR file?\nAll unsaved changes will be lost")) {
                     return@addActionListener
                 }
             }
@@ -65,34 +65,82 @@ object Menu {
         return menuBar
     }
 
-    fun instructionsPopup(method: MethodNode, list: JList<String>) {
+    fun instructionsPopup(method: MethodNode, parent: ClassNode, list: JList<String>) {
         val popup = JPopupMenu()
         if (list.selectedIndices.size > 0) {
             if (list.selectedIndices.size == 1) {
+                val insn = method.instructions[list.selectedIndex]
+
+                if (insn is MethodInsnNode){
+                    val declaration = JMenuItem("Go to declaration")
+                    declaration.addActionListener {
+                        val owner = FileUtil.classes[insn.owner]
+                        if (owner != null)
+                            for (methodNode in owner.methods){
+                                if (methodNode is MethodNode && methodNode.name.equals(insn.name)
+                                        && methodNode.desc.equals(insn.desc))
+                                    JBytedit.INSTANCE.openMethod(methodNode, owner)
+                            }
+                    }
+                    popup.add(declaration)
+                }
+
+                if (insn is FieldInsnNode){
+                    val declaration = JMenuItem("Go to declaration")
+                    declaration.addActionListener {
+                        val owner = FileUtil.classes[insn.owner]
+                        if (owner != null)
+                            JBytedit.INSTANCE.openClass(owner)
+                    }
+                    popup.add(declaration)
+                }
+
+                if (insn is MethodInsnNode){
+                    val findUsages = JMenuItem("Find usages")
+                    findUsages.addActionListener {
+                        val resultList = Vector<SearchEntry>()
+                        for (classNode in FileUtil.classes.values)
+                            for (methodNode in (classNode as ClassNode).methods){
+                                var i = 0
+                                for (insnNode in (methodNode as MethodNode).instructions) {
+                                    if (insnNode is MethodInsnNode) {
+                                        if (insnNode.owner == insn.owner && insnNode.name == insn.name &&
+                                                insnNode.desc == insn.desc) {
+                                            resultList.addElement(SearchEntry(classNode.name + "." + methodNode.name + methodNode.desc + " - line " + (i + 1), classNode, methodNode, insnNode, i))
+                                        }
+                                    }
+                                    i++
+                                }
+                            }
+                        JBytedit.INSTANCE.openResults(Component.resultsList(resultList))
+                    }
+                    popup.add(findUsages)
+                }
+
                 val insert = JMenuItem("Insert")
                 insert.addActionListener {
-                    Dialog.insertInstruction(method, list.selectedIndex)
+                    Dialog.insertInstruction(method, parent, list.selectedIndex)
                 }
                 popup.add(insert)
 
                 val moveUp = JMenuItem("Move Up")
                 moveUp.addActionListener {
                     Edit.moveInsnBy(-1, method.instructions, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method)
+                    JBytedit.INSTANCE.openMethod(method, parent)
                 }
                 popup.add(moveUp)
 
                 val moveDown = JMenuItem("Move Down")
                 moveDown.addActionListener {
                     Edit.moveInsnBy(1, method.instructions, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method)
+                    JBytedit.INSTANCE.openMethod(method, parent)
                 }
                 popup.add(moveDown)
 
                 val edit = JMenuItem("Edit")
                 edit.addActionListener {
                     Dialog.instructionEditor(method, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method)
+                    JBytedit.INSTANCE.openMethod(method, parent)
                 }
                 popup.add(edit)
             } else {
@@ -102,7 +150,7 @@ object Menu {
             val remove = JMenuItem("Remove")
             remove.addActionListener {
                 Edit.removeInsns(method.instructions, list.selectedIndices)
-                JBytedit.INSTANCE.openMethod(method)
+                JBytedit.INSTANCE.openMethod(method, parent)
             }
             popup.add(remove)
         }
@@ -182,10 +230,20 @@ object Menu {
         }
     }
 
-    fun searchResultsPopup(list: JList<SearchEntry>) {
-        val popupMenu = JPopupMenu()
-        
-        popupMenu.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
+    fun searchResultPopup(list: JList<SearchEntry>) {
+        if (list.selectedIndices.size > 0){
+            val popup = JPopupMenu()
+            if (list.selectedIndices.size == 1){
+                if (list.selectedValue.insnNode != null){
+                    val clear = JMenuItem("Go to Method")
+                    clear.addActionListener {
+                        JBytedit.INSTANCE.openMethod(list.selectedValue.methodNode!!, list.selectedValue.classNode!!)
+                    }
+                    popup.add(clear)
+                }
+            }
+            popup.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
+        }
     }
 
 }
