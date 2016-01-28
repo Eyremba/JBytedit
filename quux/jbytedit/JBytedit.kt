@@ -1,11 +1,13 @@
 package quux.jbytedit
 
+import com.sun.javafx.event.DirectEvent
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import quux.jbytedit.entry.SearchEntry
 import quux.jbytedit.forge.Component
 import quux.jbytedit.forge.Menu
 import quux.jbytedit.tree.ClassTreeNode
+import quux.jbytedit.tree.DirectoryTreeNode
 import quux.jbytedit.tree.MethodTreeNode
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -23,8 +25,8 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
 
     val treePane = JScrollPane()
     val editorPane = JScrollPane()
+    var rootNode: DirectoryTreeNode? = null
     var fileTree: JTree? = null
-    var openedList: JList<Any?>? = null
     val titleLabel: JLabel = JLabel(" ")
 
     init {
@@ -60,7 +62,7 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
 
     fun openNode(treeNode: Any?) {
         if (treeNode is MethodTreeNode) {
-            openMethod(treeNode.node, treeNode.parentNode.node)
+            openMethod(treeNode.node, treeNode.parentNode.node, 0)
         } else if (treeNode is ClassTreeNode) {
             openClass(treeNode.node)
         }
@@ -68,15 +70,18 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
 
     fun openJar(jar: JarFile) {
         fileTree = Component.fileTree(jar)
+        rootNode = fileTree!!.model.root as DirectoryTreeNode
         treePane.viewport.removeAll()
         treePane.viewport.add(fileTree)
         jar.close()
     }
 
-    fun openMethod(method: MethodNode, parent: ClassNode) {
+    fun openMethod(method: MethodNode, parent: ClassNode, index: Int) {
         titleLabel.text = "Method: " + parent.name + "." + method.name + " " + method.desc
         editorPane.viewport.removeAll()
-        editorPane.viewport.add(Component.instructionList(method, parent))
+        val openedList = Component.instructionList(method, parent)
+        editorPane.viewport.add(openedList)
+        openedList.ensureIndexIsVisible(Math.min(index, openedList.maxSelectionIndex))
     }
 
     fun openClass(classNode: ClassNode) {

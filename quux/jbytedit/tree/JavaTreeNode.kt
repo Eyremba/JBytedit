@@ -28,11 +28,14 @@ open class JavaTreeNode(name: String) : DefaultMutableTreeNode(name) {
             (JBytedit.INSTANCE.fileTree!!.model as DefaultTreeModel).removeNodeFromParent(this)
     }
 
-    fun getChild(name: String): DefaultMutableTreeNode? {
+    fun getChild(name: String): JavaTreeNode? {
+        val path = name.split("/")
         for (child in children()) {
-            if (child is DefaultMutableTreeNode) {
-                if (child.toString().equals(name)) {
-                    return child
+            if (child is JavaTreeNode) {
+                if (child.toString().equals(path.first())) {
+                    if (path.size == 1)
+                        return child
+                    return child.getChild(path.slice(1..path.lastIndex).joinToString("/"))
                 }
             }
         }

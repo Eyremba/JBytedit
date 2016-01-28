@@ -79,7 +79,7 @@ object Menu {
                             for (methodNode in owner.methods){
                                 if (methodNode is MethodNode && methodNode.name.equals(insn.name)
                                         && methodNode.desc.equals(insn.desc))
-                                    JBytedit.INSTANCE.openMethod(methodNode, owner)
+                                    JBytedit.INSTANCE.openMethod(methodNode, owner, list.selectedIndex)
                             }
                     }
                     popup.add(declaration)
@@ -117,30 +117,53 @@ object Menu {
                     popup.add(findUsages)
                 }
 
+                if (insn is FieldInsnNode){
+                    val findUsages = JMenuItem("Find usages")
+                    findUsages.addActionListener {
+                        val resultList = Vector<SearchEntry>()
+                        for (classNode in FileUtil.classes.values)
+                            for (methodNode in (classNode as ClassNode).methods){
+                                var i = 0
+                                for (insnNode in (methodNode as MethodNode).instructions) {
+                                    if (insnNode is FieldInsnNode) {
+                                        if (insnNode.owner == insn.owner && insnNode.name == insn.name &&
+                                                insnNode.desc == insn.desc) {
+                                            resultList.addElement(SearchEntry(classNode.name + "." + methodNode.name + methodNode.desc + " - line " + (i + 1), classNode, methodNode, insnNode, i))
+                                        }
+                                    }
+                                    i++
+                                }
+                            }
+                        JBytedit.INSTANCE.openResults(Component.resultsList(resultList))
+                    }
+                    popup.add(findUsages)
+                }
+
                 val insert = JMenuItem("Insert")
                 insert.addActionListener {
                     Dialog.insertInstruction(method, parent, list.selectedIndex)
+                    JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(insert)
 
                 val moveUp = JMenuItem("Move Up")
                 moveUp.addActionListener {
                     Edit.moveInsnBy(-1, method.instructions, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method, parent)
+                    JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(moveUp)
 
                 val moveDown = JMenuItem("Move Down")
                 moveDown.addActionListener {
                     Edit.moveInsnBy(1, method.instructions, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method, parent)
+                    JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(moveDown)
 
                 val edit = JMenuItem("Edit")
                 edit.addActionListener {
                     Dialog.instructionEditor(method, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method, parent)
+                    JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(edit)
             } else {
@@ -150,7 +173,7 @@ object Menu {
             val remove = JMenuItem("Remove")
             remove.addActionListener {
                 Edit.removeInsns(method.instructions, list.selectedIndices)
-                JBytedit.INSTANCE.openMethod(method, parent)
+                JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
             }
             popup.add(remove)
         }
@@ -234,13 +257,31 @@ object Menu {
         if (list.selectedIndices.size > 0){
             val popup = JPopupMenu()
             if (list.selectedIndices.size == 1){
-                if (list.selectedValue.insnNode != null){
+                if (list.selectedValue.methodNode != null){
                     val clear = JMenuItem("Go to Method")
                     clear.addActionListener {
-                        JBytedit.INSTANCE.openMethod(list.selectedValue.methodNode!!, list.selectedValue.classNode!!)
+                        JBytedit.INSTANCE.openMethod(list.selectedValue.methodNode!!, list.selectedValue.classNode!!,
+                                list.selectedValue.methodNode!!.instructions.indexOf(list.selectedValue.insnNode))
                     }
                     popup.add(clear)
                 }
+            }
+            var allHaveMethods = true
+            list.selectedValuesList.forEach { if (it.methodNode == null) allHaveMethods = false }
+            if (allHaveMethods){
+                val clear = JMenuItem("Clear containing method" + (if (list.selectedIndices.size == 1) "" else "s"))
+                clear.addActionListener {
+                    var panel = JPanel(GridLayout(0, 1))
+                    panel.add(JLabel("Are you sure you want to clear the content of these methods?"))
+                    var checkbox = JCheckBox("Ignore <init> and <clinit> methods", true)
+                    panel.add(checkbox)
+                    val promptResult = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Confirmation needed", JOptionPane.YES_NO_OPTION)
+                    if (promptResult == JOptionPane.YES_OPTION)
+                        for (value in list.selectedValuesList){
+                            JBytedit.INSTANCE.rootNode!!.getChild(value.classNode!!.name + "/" + value.methodNode!!.name)!!.clear(checkbox.isSelected)
+                        }
+                }
+                popup.add(clear)
             }
             popup.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
         }

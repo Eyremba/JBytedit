@@ -158,7 +158,6 @@ object Dialog {
                 method.instructions.insert(target, LabelNode())
             } else {
                 abstractInsnEditor(type.selectedItem.toString(), target, method, false)
-                JBytedit.INSTANCE.openMethod(method, parent)
             }
         }
     }
