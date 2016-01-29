@@ -1,6 +1,5 @@
 package quux.jbytedit
 
-import com.sun.javafx.event.DirectEvent
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import quux.jbytedit.entry.SearchEntry
@@ -25,6 +24,9 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
 
     val treePane = JScrollPane()
     val editorPane = JScrollPane()
+    val searchPane = JScrollPane()
+    val tabbedPane = JTabbedPane()
+    var insnListModel: DefaultListModel<String>? = null
     var rootNode: DirectoryTreeNode? = null
     var fileTree: JTree? = null
     val titleLabel: JLabel = JLabel(" ")
@@ -51,10 +53,16 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
         treePane.preferredSize = Dimension(300, 500)
         add(treePane, BorderLayout.WEST)
 
+        val panel = JPanel(BorderLayout())
         editorPane.preferredSize = Dimension(600, 500)
-        add(editorPane, BorderLayout.CENTER)
+        panel.add(titleLabel, BorderLayout.NORTH)
+        panel.add(editorPane, BorderLayout.CENTER)
+        tabbedPane.addTab("Editor", panel)
+        tabbedPane.addTab("Search Results", searchPane)
+        tabbedPane.preferredSize = Dimension(600, 500)
+        add(tabbedPane, BorderLayout.CENTER)
 
-        add(titleLabel, BorderLayout.NORTH)
+        //add(titleLabel, BorderLayout.NORTH)
 
         pack()
         isVisible = true
@@ -80,19 +88,25 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
         titleLabel.text = "Method: " + parent.name + "." + method.name + " " + method.desc
         editorPane.viewport.removeAll()
         val openedList = Component.instructionList(method, parent)
+        insnListModel = openedList.model as DefaultListModel<String>
         editorPane.viewport.add(openedList)
-        openedList.ensureIndexIsVisible(Math.min(index, openedList.maxSelectionIndex))
+        openedList.fixedCellHeight = 20
+        openedList.ensureIndexIsVisible(index)
+        openedList.selectedIndex = index
+        tabbedPane.selectedIndex = 0
     }
 
     fun openClass(classNode: ClassNode) {
         titleLabel.text = "Class: " + classNode.name
         editorPane.viewport.removeAll()
         editorPane.viewport.add(Component.fieldsList(classNode))
+        tabbedPane.selectedIndex = 0
     }
 
     fun openResults(list: JList<SearchEntry>){
         titleLabel.text = "Search Results"
-        editorPane.viewport.removeAll()
-        editorPane.viewport.add(list)
+        searchPane.viewport.removeAll()
+        searchPane.viewport.add(list)
+        tabbedPane.selectedIndex = 1
     }
 }

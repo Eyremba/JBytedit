@@ -2,10 +2,13 @@ package quux.jbytedit.forge
 
 import org.objectweb.asm.tree.*
 import quux.jbytedit.JBytedit
+import quux.jbytedit.entry.SearchEntry
 import quux.jbytedit.util.Edit
+import quux.jbytedit.util.FileUtil
 import quux.jbytedit.util.OpUtil
 import java.awt.BorderLayout
 import java.awt.GridLayout
+import java.util.*
 import javax.swing.*
 
 object Dialog {
@@ -155,7 +158,9 @@ object Dialog {
         if (result == JOptionPane.YES_OPTION) {
             val target = method.instructions[index - (if (position.selectedItem.equals("Before")) 1 else 0)]
             if (type.selectedItem == "LabelNode") {
-                method.instructions.insert(target, LabelNode())
+                val labelNode = LabelNode()
+                method.instructions.insert(target, labelNode)
+                JBytedit.INSTANCE.openMethod(method, parent, index)
             } else {
                 abstractInsnEditor(type.selectedItem.toString(), target, method, false)
             }
@@ -413,6 +418,61 @@ object Dialog {
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
             Edit.insertOrReplaceInsn(InsnNode(opcode), node, method.instructions, edit)
+        }
+    }
+
+    fun searchString() {
+
+        val panel = JPanel(BorderLayout(5, 5))
+        val input = JPanel(GridLayout(0, 1))
+        val labels = JPanel(GridLayout(0, 1))
+        panel.add(labels, BorderLayout.WEST)
+        panel.add(input, BorderLayout.CENTER)
+        labels.add(JLabel("String: "))
+        val text = JTextField()
+        input.add(text)
+        val checkbox = JCheckBox("Match case", false)
+        panel.add(checkbox, BorderLayout.SOUTH)
+        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Search String",
+                JOptionPane.OK_CANCEL_OPTION)
+        try {
+            if (result == JOptionPane.OK_OPTION) {
+                val searchString = if (checkbox.isSelected) text.text else text.text.toLowerCase()
+                val results = Vector<SearchEntry>()
+                for (classNode in FileUtil.classes.values){
+                    for (method in classNode!!.methods){
+                        if (method is MethodNode) {
+                            var i = 0
+                            for (instruction in method.instructions) {
+                                if (instruction is LdcInsnNode) {
+                                    val str = if (checkbox.isSelected) instruction.cst.toString() else instruction.cst.toString().toLowerCase()
+                                    if (str.contains(searchString)) {
+                                        results.addElement(SearchEntry(classNode.name + "." + method.name + method.desc + " - line " + (i + 1), classNode, method, instruction))
+                                    }
+                                }
+                                i++
+                            }
+                        }
+                    }
+                    for (field in classNode.fields){
+                        if (field is FieldNode){
+                            if (field.value != null) {
+                                val str = if (checkbox.isSelected) field.value.toString() else field.value.toString().toLowerCase()
+                                if (str.contains(searchString)) {
+                                    results.addElement(SearchEntry(classNode.name + " - fields", classNode, null, null))
+                                }
+                            }
+                        }
+                    }
+                }
+                JBytedit.INSTANCE.openResults(Component.resultsList(results))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            JOptionPane.showMessageDialog(JBytedit.INSTANCE,
+                    "An error occurred",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 

@@ -96,6 +96,8 @@ object OpUtil {
                     result += "float"
                 } else if (char == 'D') {
                     result += "double"
+                } else if (char == 'V') {
+                    result += "void"
                 } else {
                     isFullyQualifiedClass = true
                     continue
@@ -152,7 +154,7 @@ object OpUtil {
         } else if (node is JumpInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode]) + " " + node.label.label.hashCode()
         } else if (node is LabelNode) {
-            resolvedLabels.put(node.label.hashCode(), labelCount)
+            resolvedLabels.getOrPut(node.label.hashCode(), { labelCount })
             labelCount++
             return TextUtil.toLighter("label " + (labelCount - 1))
 
@@ -176,7 +178,8 @@ object OpUtil {
         } else if (node is FieldInsnNode) {
             return TextUtil.toBold(mnemonics[node.opcode]) + " ${getDisplayType(node.desc)} ${node.owner.split("/").last()}.${node.name}"
         } else if (node is MethodInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " ${TextUtil.addTag(node.owner.split("/").last(), "font color=#995555")}.${TextUtil.escapeHTML(node.name)}(${getDisplayArgs(node.desc)})"
+            return TextUtil.toBold(mnemonics[node.opcode]) + " " + getDisplayType(node.desc.split(")")[1]) + " ${TextUtil.addTag(node.owner.split("/").last(), "font color=#995555")}.${TextUtil.escapeHTML(node.name)}(${getDisplayArgs(node.desc)})"
+
         } else {
             return TextUtil.toBold(mnemonics[node.opcode])
         }

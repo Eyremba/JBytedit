@@ -9,7 +9,6 @@ import quux.jbytedit.tree.MethodTreeNode
 import quux.jbytedit.util.Edit
 import quux.jbytedit.util.FileUtil
 import java.awt.GridLayout
-import java.awt.Rectangle
 import java.util.*
 import java.util.jar.JarFile
 import javax.swing.*
@@ -62,6 +61,12 @@ object Menu {
         }
         tools.add(zkmDecrypt)
 
+        val searchString = JMenuItem("Find String...")
+        searchString.addActionListener {
+            Dialog.searchString()
+        }
+        tools.add(searchString)
+
         return menuBar
     }
 
@@ -106,7 +111,7 @@ object Menu {
                                     if (insnNode is MethodInsnNode) {
                                         if (insnNode.owner == insn.owner && insnNode.name == insn.name &&
                                                 insnNode.desc == insn.desc) {
-                                            resultList.addElement(SearchEntry(classNode.name + "." + methodNode.name + methodNode.desc + " - line " + (i + 1), classNode, methodNode, insnNode, i))
+                                            resultList.addElement(SearchEntry(classNode.name + "." + methodNode.name + methodNode.desc + " - line " + (i + 1), classNode, methodNode, insnNode))
                                         }
                                     }
                                     i++
@@ -128,7 +133,7 @@ object Menu {
                                     if (insnNode is FieldInsnNode) {
                                         if (insnNode.owner == insn.owner && insnNode.name == insn.name &&
                                                 insnNode.desc == insn.desc) {
-                                            resultList.addElement(SearchEntry(classNode.name + "." + methodNode.name + methodNode.desc + " - line " + (i + 1), classNode, methodNode, insnNode, i))
+                                            resultList.addElement(SearchEntry(classNode.name + "." + methodNode.name + methodNode.desc + " - line " + (i + 1), classNode, methodNode, insnNode))
                                         }
                                     }
                                     i++
@@ -142,28 +147,28 @@ object Menu {
                 val insert = JMenuItem("Insert")
                 insert.addActionListener {
                     Dialog.insertInstruction(method, parent, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
+                    //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(insert)
 
                 val moveUp = JMenuItem("Move Up")
                 moveUp.addActionListener {
                     Edit.moveInsnBy(-1, method.instructions, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
+                    //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(moveUp)
 
                 val moveDown = JMenuItem("Move Down")
                 moveDown.addActionListener {
                     Edit.moveInsnBy(1, method.instructions, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
+                    //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(moveDown)
 
                 val edit = JMenuItem("Edit")
                 edit.addActionListener {
                     Dialog.instructionEditor(method, list.selectedIndex)
-                    JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
+                    //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(edit)
             } else {
@@ -173,7 +178,7 @@ object Menu {
             val remove = JMenuItem("Remove")
             remove.addActionListener {
                 Edit.removeInsns(method.instructions, list.selectedIndices)
-                JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
+                //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
             }
             popup.add(remove)
         }
@@ -262,6 +267,14 @@ object Menu {
                     clear.addActionListener {
                         JBytedit.INSTANCE.openMethod(list.selectedValue.methodNode!!, list.selectedValue.classNode!!,
                                 list.selectedValue.methodNode!!.instructions.indexOf(list.selectedValue.insnNode))
+                    }
+                    popup.add(clear)
+                }
+                else if (list.selectedValue.classNode != null){
+                    val clear = JMenuItem("Open Class")
+                    clear.addActionListener {
+                        val classNode = list.selectedValue.classNode
+                        JBytedit.INSTANCE.openClass(classNode)
                     }
                     popup.add(clear)
                 }

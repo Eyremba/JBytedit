@@ -18,6 +18,7 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
 import java.util.jar.JarFile
+import javax.swing.DefaultListModel
 import javax.swing.JList
 import javax.swing.JTree
 import javax.swing.SwingUtilities
@@ -122,7 +123,10 @@ object Component {
             instructions.replaceAll { it.replace(key.toString(), OpUtil.resolvedLabels[key].toString()) }
         }
 
-        val list = JList(instructions)
+        val model = DefaultListModel<String>()
+        val list = JList(model)
+        instructions.forEach { model.addElement(it) }
+
         list.font = Font(Font.SANS_SERIF, Font.PLAIN, 13)
 
         list.addMouseListener(object : MouseAdapter() {

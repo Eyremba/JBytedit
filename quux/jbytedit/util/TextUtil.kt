@@ -32,7 +32,7 @@ object TextUtil {
     }
 
     fun toLighter(str: String?): String {
-        return toHtml(addTag(addTag(str, "font color=#999999"), "i"))
+        return toHtml(addTag(str, "font color=#999999"))
     }
 
     fun toBold(str: String?): String {

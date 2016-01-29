@@ -1,6 +1,7 @@
 package quux.jbytedit.util
 
 import org.objectweb.asm.tree.*
+import quux.jbytedit.JBytedit
 import quux.jbytedit.tree.JavaTreeNode
 import java.util.*
 import javax.swing.JTree
@@ -50,21 +51,32 @@ object Edit {
 
     fun removeInsns(instructions: InsnList?, selectedIndices: IntArray?) {
         val insnsToRemove = ArrayList<AbstractInsnNode>()
-        selectedIndices!!.forEach { insnsToRemove.add(instructions!![it]) }
+        selectedIndices!!.forEach {
+            insnsToRemove.add(instructions!![it])
+            JBytedit.INSTANCE.insnListModel!!.removeElementAt(it)
+        }
         insnsToRemove.forEach { instructions!!.remove(it) }
     }
 
     fun moveInsnBy(i: Int, instructions: InsnList, selectedIndex: Int) {
         if (selectedIndex + i > 0 && selectedIndex + i < instructions.size() - 1) {
-            val node = instructions[selectedIndex]
+            val node = instructions[selectedIndex + i]
             instructions.remove(node)
-            instructions.insertBefore(instructions[selectedIndex + i], node)
+            JBytedit.INSTANCE.insnListModel!!.removeElementAt(selectedIndex + i)
+            instructions.insert(instructions[selectedIndex - 1], node)
+            var displayString = OpUtil.getDisplayInstruction(node)
+            if (node is LabelNode)
+                for (key in OpUtil.resolvedLabels.keys)
+                    displayString.replace(key.toString(), OpUtil.resolvedLabels[key].toString())
+            JBytedit.INSTANCE.insnListModel!!.add(selectedIndex, displayString)
         }
     }
 
     fun insertOrReplaceInsn(source: AbstractInsnNode?, target: AbstractInsnNode?, instructions: InsnList, replace: Boolean){
+        JBytedit.INSTANCE.insnListModel!!.add(instructions.indexOf(target) + 1, OpUtil.getDisplayInstruction(source!!))
         instructions.insert(target, source)
         if (replace){
+            JBytedit.INSTANCE.insnListModel!!.removeElementAt(instructions.indexOf(target))
             instructions.remove(target)
         }
     }

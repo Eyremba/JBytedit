@@ -116,6 +116,8 @@ object ZKMDecrypter {
         while (modifiers.size == 0 && methodIter.hasNext()){
             modifiers = getModifiers(methodIter.next() as MethodNode)
         }
+        if (modifiers.size > 0)
+            println(classNode.name)
     }
 
     private fun decryptString(s : String, modifiers: ArrayList<Int>): String {
