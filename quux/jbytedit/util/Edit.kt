@@ -51,7 +51,7 @@ object Edit {
 
     fun removeInsns(instructions: InsnList?, selectedIndices: IntArray?) {
         val insnsToRemove = ArrayList<AbstractInsnNode>()
-        selectedIndices!!.forEach {
+        selectedIndices!!.sorted().reversed().forEach {
             insnsToRemove.add(instructions!![it])
             JBytedit.INSTANCE.insnListModel!!.removeElementAt(it)
         }
@@ -59,17 +59,33 @@ object Edit {
     }
 
     fun moveInsnBy(i: Int, instructions: InsnList, selectedIndex: Int) {
-        if (selectedIndex + i > 0 && selectedIndex + i < instructions.size() - 1) {
+        if (selectedIndex + i >= 0 && selectedIndex + i <= instructions.size() - 1) {
             val node = instructions[selectedIndex + i]
             instructions.remove(node)
             JBytedit.INSTANCE.insnListModel!!.removeElementAt(selectedIndex + i)
-            instructions.insert(instructions[selectedIndex - 1], node)
+            try {
+                instructions.insertBefore(instructions[selectedIndex], node)
+            }
+            catch (e: Exception) {
+                instructions.insert(instructions[selectedIndex - 1], node)
+            }
             var displayString = OpUtil.getDisplayInstruction(node)
             if (node is LabelNode)
                 for (key in OpUtil.resolvedLabels.keys)
                     displayString.replace(key.toString(), OpUtil.resolvedLabels[key].toString())
             JBytedit.INSTANCE.insnListModel!!.add(selectedIndex, displayString)
         }
+        /*else if (selectedIndex == 1 && i == -1){
+            val node = instructions[selectedIndex + 1]
+            instructions.remove(node)
+            JBytedit.INSTANCE.insnListModel!!.removeElementAt(selectedIndex + 1)
+            instructions.insertBefore(instructions[selectedIndex], node)
+            var displayString = OpUtil.getDisplayInstruction(node)
+            if (node is LabelNode)
+                for (key in OpUtil.resolvedLabels.keys)
+                    displayString.replace(key.toString(), OpUtil.resolvedLabels[key].toString())
+            JBytedit.INSTANCE.insnListModel!!.add(selectedIndex, displayString)
+        }*/
     }
 
     fun insertOrReplaceInsn(source: AbstractInsnNode?, target: AbstractInsnNode?, instructions: InsnList, replace: Boolean){

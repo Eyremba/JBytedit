@@ -156,7 +156,15 @@ object Dialog {
         var result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert node",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.YES_OPTION) {
-            val target = method.instructions[index - (if (position.selectedItem.equals("Before")) 1 else 0)]
+            val modifiedIndex = index - (if (position.selectedItem.equals("Before")) 1 else 0)
+            var target: AbstractInsnNode?
+            if (modifiedIndex == -1) {
+                target = InsnNode(-1)
+                JBytedit.INSTANCE.insnListModel!!.add(0, "")
+                method.instructions.insertBefore(method.instructions.first, target)
+            } else {
+                target = method.instructions[modifiedIndex]
+            }
             if (type.selectedItem == "LabelNode") {
                 val labelNode = LabelNode()
                 method.instructions.insert(target, labelNode)
@@ -164,10 +172,17 @@ object Dialog {
             } else {
                 abstractInsnEditor(type.selectedItem.toString(), target, method, false)
             }
+            if (type.selectedItem == "LineNumberNode"){
+                JBytedit.INSTANCE.openMethod(method, parent, index)
+            }
+            if (modifiedIndex == -1) {
+                JBytedit.INSTANCE.insnListModel!!.removeElementAt(method.instructions.indexOf(target))
+                method.instructions.remove(target)
+            }
         }
     }
 
-    fun abstractInsnEditor(type: String, node: AbstractInsnNode, method: MethodNode, edit: Boolean)
+    fun abstractInsnEditor(type: String, node: AbstractInsnNode?, method: MethodNode, edit: Boolean)
     {
         val panel = JPanel(BorderLayout(5, 5))
         val input = JPanel(GridLayout(0, 1))
@@ -303,11 +318,11 @@ object Dialog {
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             val label = LabelNode()
-            if (!edit) {
+            if (!edit || lineNode == null) {
                 method.instructions.insert(node, LineNumberNode(Integer.parseInt(value.text), label))
                 method.instructions.insert(node, label)
             } else {
-                lineNode?.line = Integer.parseInt(value.text)
+                lineNode.line = Integer.parseInt(value.text)
             }
         }
     }

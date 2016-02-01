@@ -10,6 +10,8 @@ import quux.jbytedit.tree.DirectoryTreeNode
 import quux.jbytedit.tree.MethodTreeNode
 import java.awt.BorderLayout
 import java.awt.Dimension
+import java.awt.dnd.DropTarget
+import java.awt.dnd.DropTargetDropEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.util.jar.JarFile
@@ -19,7 +21,7 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
 
     companion object {
         lateinit var INSTANCE: JBytedit
-        val version = "v0.1"
+        val version = "v0.2.1"
     }
 
     val treePane = JScrollPane()
@@ -46,12 +48,33 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
             }
         })
 
+        dropTarget = object : DropTarget() {
+            override fun drop(event: DropTargetDropEvent) {
+                try {
+                    event.acceptDrop(java.awt.dnd.DnDConstants.ACTION_COPY)
+                    val droppedFiles = event.transferable.getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor) as List<java.io.File>
+                    for (file in droppedFiles){
+                       if (file.extension.toLowerCase().equals("jar")){
+                           quux.jbytedit.util.FileUtil.selectedJar = file
+                           openJar(java.util.jar.JarFile(java.io.File(file.absolutePath)))
+                       }
+                    }
+                } catch (e: Exception){
+                    e.printStackTrace()
+                }
+            }
+        }
+
         jMenuBar = Menu.topBar()
 
         minimumSize = Dimension(900, 500)
 
+        val label = JLabel("Drag and drop files to open")
+        label.horizontalAlignment = JLabel.CENTER;
+        label.verticalAlignment = JLabel.CENTER;
         treePane.preferredSize = Dimension(300, 500)
         add(treePane, BorderLayout.WEST)
+        treePane.viewport.add(label)
 
         val panel = JPanel(BorderLayout())
         editorPane.preferredSize = Dimension(600, 500)
