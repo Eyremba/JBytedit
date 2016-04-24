@@ -3,9 +3,11 @@ package quux.jbytedit.forge
 import org.objectweb.asm.tree.*
 import quux.jbytedit.JBytedit
 import quux.jbytedit.entry.SearchEntry
+import quux.jbytedit.render.BlankListItem
 import quux.jbytedit.util.Edit
 import quux.jbytedit.util.FileUtil
 import quux.jbytedit.util.OpUtil
+import quux.jbytedit.util.TextUtil
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.util.*
@@ -160,7 +162,7 @@ object Dialog {
             var target: AbstractInsnNode?
             if (modifiedIndex == -1) {
                 target = InsnNode(-1)
-                JBytedit.INSTANCE.insnListModel!!.add(0, "")
+                JBytedit.INSTANCE.insnListModel!!.add(0, BlankListItem())
                 method.instructions.insertBefore(method.instructions.first, target)
             } else {
                 target = method.instructions[modifiedIndex]
@@ -459,10 +461,14 @@ object Dialog {
                         if (method is MethodNode) {
                             var i = 0
                             for (instruction in method.instructions) {
-                                if (instruction is LdcInsnNode) {
-                                    val str = if (checkbox.isSelected) instruction.cst.toString() else instruction.cst.toString().toLowerCase()
-                                    if (str.contains(searchString)) {
-                                        results.addElement(SearchEntry(classNode.name + "." + method.name + method.desc + " - line " + (i + 1), classNode, method, instruction))
+                                if (instruction is LdcInsnNode && instruction.cst is String) {
+                                    val str = instruction.cst.toString()
+                                    if (str.contains(searchString, !checkbox.isSelected)) {
+                                        results.addElement(SearchEntry(
+                                                TextUtil.toHtml(OpUtil.getDisplayClass(classNode.name) + "." +
+                                                        TextUtil.escapeHTML(method.name) + " - " +
+                                                        TextUtil.addTag("\"${str}\"", "font color=#559955")),
+                                                classNode, method, instruction))
                                     }
                                 }
                                 i++
@@ -471,10 +477,10 @@ object Dialog {
                     }
                     for (field in classNode.fields){
                         if (field is FieldNode){
-                            if (field.value != null) {
-                                val str = if (checkbox.isSelected) field.value.toString() else field.value.toString().toLowerCase()
-                                if (str.contains(searchString)) {
-                                    results.addElement(SearchEntry(classNode.name + " - fields", classNode, null, null))
+                            if (field.value != null && field.value is String) {
+                                val str = field.value.toString()
+                                if (str.contains(searchString, !checkbox.isSelected)) {
+                                    results.addElement(SearchEntry(TextUtil.toHtml(OpUtil.getDisplayClass(classNode.name) + "." + field.name), classNode, null, null))
                                 }
                             }
                         }

@@ -1,5 +1,6 @@
 package quux.jbytedit.forge
 
+import javafx.embed.swing.SwingFXUtils
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
@@ -8,6 +9,8 @@ import org.objectweb.asm.tree.MethodNode
 import quux.jbytedit.JBytedit
 import quux.jbytedit.entry.SearchEntry
 import quux.jbytedit.render.CustomTreeRenderer
+import quux.jbytedit.render.InstructionItem
+import quux.jbytedit.render.ListItem
 import quux.jbytedit.tree.ClassTreeNode
 import quux.jbytedit.tree.DirectoryTreeNode
 import quux.jbytedit.tree.MethodTreeNode
@@ -110,24 +113,24 @@ object Component {
         return list
     }
 
-    fun instructionList(method: MethodNode, parent: ClassNode): JList<String> {
+    fun instructionList(method: MethodNode, parent: ClassNode): JList<ListItem> {
 
-        val instructions = Vector<String>()
+        val instructions = Vector<InstructionItem>()
 
         OpUtil.resetLabels()
         for (insn in method.instructions) {
-            instructions.addElement(OpUtil.getDisplayInstruction(insn as AbstractInsnNode))
+            instructions.addElement(InstructionItem(insn as AbstractInsnNode))
         }
 
-        for (key in OpUtil.resolvedLabels.keys) {
-            instructions.replaceAll { it.replace(key.toString(), OpUtil.resolvedLabels[key].toString()) }
-        }
-
-        val model = DefaultListModel<String>()
+        val model = DefaultListModel<ListItem>()
         val list = JList(model)
         instructions.forEach { model.addElement(it) }
 
         list.font = Font(Font.SANS_SERIF, Font.PLAIN, 13)
+
+        list.addListSelectionListener {
+            JBytedit.INSTANCE.openFrameList(list.selectedIndex)
+        }
 
         list.addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent?) {

@@ -40,11 +40,10 @@ object OpUtil {
         mnemonics.keys.forEach { opcodes.put(mnemonics[it]!!, it) }
     }
 
-    val nodeTypes = arrayOf("FrameNode", "IincInsnNode", "IntInsnNode",
-            "InvokeDynamicInsnNode", "JumpInsnNode", "LabelNode", "LdcInsnNode",
-            "LineNumberNode", "LookupSwitchInsnNode", "MultiANewArrayInsnNode",
-            "TableSwitchInsnNode", "TypeInsnNode", "VarInsnNode", "FieldInsnNode",
-            "MethodInsnNode", "InsnNode")
+    val nodeTypes = arrayOf("IincInsnNode", "IntInsnNode",
+            "JumpInsnNode", "LabelNode", "LdcInsnNode",
+            "LineNumberNode", "TypeInsnNode", "VarInsnNode", "FieldInsnNode",
+            "MethodInsnNode", "InsnNode")//"FrameNode", "InvokeDynamicInsnNode", "LookupSwitchInsnNode", "MultiANewArrayInsnNode", "TableSwitchInsnNode",
 
     val resolvedLabels = HashMap<Int, Int>()
     var labelCount = 0
@@ -119,6 +118,10 @@ object OpUtil {
         return TextUtil.addTag(result, "font color=#557799")
     }
 
+    fun getDisplayClass(fullName: String): String {
+        return TextUtil.addTag(fullName.split("/").last(), "font color=#557799")
+    }
+
     fun getDisplayAccess(access: Int): String {
         var result = ""
         if (access and Opcodes.ACC_PUBLIC != 0) {
@@ -142,49 +145,63 @@ object OpUtil {
         return result
     }
 
-    fun getDisplayInstruction(node: AbstractInsnNode): String {
+    private fun getInstructionDisplayContent(node: AbstractInsnNode): String {
+        return TextUtil.toBold(mnemonics[node.opcode]) +
         if (node is FrameNode) {
             return TextUtil.toLighter("stack frame")
         } else if (node is IincInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " " + node.`var` + " " + node.incr
+            " " + node.`var` + " " + node.incr
         } else if (node is IntInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " ${node.operand}"
+            " ${node.operand}"
         } else if (node is InvokeDynamicInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " ${node.name}(${getDisplayArgs(node.desc)}) - unsupported dynamic method! "
+            " ${node.name}(${getDisplayArgs(node.desc)}) - unsupported dynamic method! "
         } else if (node is JumpInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " " + node.label.label.hashCode()
+            " " + getLabelNumber(node.label)
         } else if (node is LabelNode) {
-            resolvedLabels.getOrPut(node.label.hashCode(), { labelCount })
-            labelCount++
-            return TextUtil.toLighter("label " + (labelCount - 1))
-
+            return TextUtil.toLighter("label " + getLabelNumber(node))
         } else if (node is LdcInsnNode) {
             if (node.cst is String)
-                return TextUtil.toBold(mnemonics[node.opcode]) + " " + TextUtil.addTag("\"${node.cst}\"", "font color=#559955")
+                " " + TextUtil.addTag("\"${node.cst}\"", "font color=#559955")
             else
-                return TextUtil.toBold(mnemonics[node.opcode]) + " ${node.cst}"
+                " ${node.cst}"
         } else if (node is LineNumberNode) {
             return TextUtil.toLighter("line " + node.line)
         } else if (node is LookupSwitchInsnNode) {
             return TextUtil.toLighter("lookup switch")
         } else if (node is MultiANewArrayInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " - unsuported MiltiArray node!"
+            " - unsuported MiltiArray node!"
         } else if (node is TableSwitchInsnNode) {
             return TextUtil.toLighter("table switch")
         } else if (node is TypeInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " " + getDisplayType(node.desc)
+            " " + getDisplayClass(node.desc)
         } else if (node is VarInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " " + node.`var`
+            " " + node.`var`
         } else if (node is FieldInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " ${getDisplayType(node.desc)} ${node.owner.split("/").last()}.${node.name}"
+            " ${getDisplayType(node.desc)} ${node.owner.split("/").last()}.${node.name}"
         } else if (node is MethodInsnNode) {
-            return TextUtil.toBold(mnemonics[node.opcode]) + " " + getDisplayType(node.desc.split(")")[1]) + " ${TextUtil.addTag(node.owner.split("/").last(), "font color=#995555")}.${TextUtil.escapeHTML(node.name)}(${getDisplayArgs(node.desc)})"
+            " " + getDisplayType(node.desc.split(")")[1]) + " ${TextUtil.addTag(node.owner.split("/").last(), "font color=#995555")}.${TextUtil.escapeHTML(node.name)}(${getDisplayArgs(node.desc)})"
 
         } else {
             return TextUtil.toBold(mnemonics[node.opcode])
         }
     }
 
+    fun getDisplayInstruction(node: AbstractInsnNode): String {
+        return TextUtil.toHtml(getInstructionDisplayContent(node))
+    }
+
+    fun getLabelNumber(node: LabelNode): Int{
+        var label = 0
+        if (resolvedLabels.contains(node.label.hashCode())){
+            label = resolvedLabels[node.label.hashCode()]!!
+        }
+        else {
+            resolvedLabels.put(node.label.hashCode(), labelCount)
+            label = labelCount
+            labelCount ++
+        }
+        return label
+    }
 
     fun getDisplayField(field: FieldNode): String {
         return TextUtil.toHtml(

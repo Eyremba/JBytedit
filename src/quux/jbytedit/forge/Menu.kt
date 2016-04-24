@@ -4,6 +4,8 @@ import org.objectweb.asm.tree.*
 import quux.jbytedit.JBytedit
 import quux.jbytedit.decrypt.ZKMDecrypter
 import quux.jbytedit.entry.SearchEntry
+import quux.jbytedit.render.InstructionItem
+import quux.jbytedit.render.ListItem
 import quux.jbytedit.tree.ClassTreeNode
 import quux.jbytedit.tree.MethodTreeNode
 import quux.jbytedit.util.Edit
@@ -28,8 +30,12 @@ object Menu {
                     return@addActionListener
                 }
             }
-            FileUtil.selectedJar = FileUtil.selectJar()
-            JBytedit.INSTANCE.openJar(JarFile(FileUtil.selectedJar))
+            FileUtil.selectedJar = FileUtil.selectJar() ?: return@addActionListener
+            try {
+                JBytedit.INSTANCE.openJar(JarFile(FileUtil.selectedJar))
+            } catch (e: Exception) {
+                Dialog.error("There was an error while opening the selected file!")
+            }
         }
         fileMenu.add(open)
 
@@ -47,8 +53,6 @@ object Menu {
             val file = FileUtil.selectJar()
             if (file != null)
                 FileUtil.saveJar(file)
-            else
-                Dialog.error("You did not select a valid file")
         }
         fileMenu.add(saveAs)
 
@@ -70,11 +74,11 @@ object Menu {
         return menuBar
     }
 
-    fun instructionsPopup(method: MethodNode, parent: ClassNode, list: JList<String>) {
+    fun instructionsPopup(method: MethodNode, parent: ClassNode, list: JList<ListItem>) {
         val popup = JPopupMenu()
         if (list.selectedIndices.size > 0) {
             if (list.selectedIndices.size == 1) {
-                val insn = method.instructions[list.selectedIndex]
+                val insn = (list.selectedValue as InstructionItem).insn
 
                 if (insn is MethodInsnNode){
                     val declaration = JMenuItem("Go to declaration")
@@ -147,28 +151,24 @@ object Menu {
                 val insert = JMenuItem("Insert")
                 insert.addActionListener {
                     Dialog.insertInstruction(method, parent, list.selectedIndex)
-                    //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(insert)
 
                 val moveUp = JMenuItem("Move Up")
                 moveUp.addActionListener {
                     Edit.moveInsnBy(-1, method.instructions, list.selectedIndex)
-                    //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(moveUp)
 
                 val moveDown = JMenuItem("Move Down")
                 moveDown.addActionListener {
                     Edit.moveInsnBy(1, method.instructions, list.selectedIndex)
-                    //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(moveDown)
 
                 val edit = JMenuItem("Edit")
                 edit.addActionListener {
                     Dialog.instructionEditor(method, list.selectedIndex)
-                    //JBytedit.INSTANCE.openMethod(method, parent, list.selectedIndex)
                 }
                 popup.add(edit)
             } else {

@@ -2,6 +2,7 @@ package quux.jbytedit.util
 
 import org.objectweb.asm.tree.*
 import quux.jbytedit.JBytedit
+import quux.jbytedit.render.InstructionItem
 import quux.jbytedit.tree.JavaTreeNode
 import java.util.*
 import javax.swing.JTree
@@ -47,6 +48,7 @@ object Edit {
         val fieldsToRemove = ArrayList<Any?>()
         selectedIndices!!.forEach { fieldsToRemove.add(fields[it]) }
         fieldsToRemove.forEach { fields.remove(it) }
+        JBytedit.INSTANCE.refreshFrames()
     }
 
     fun removeInsns(instructions: InsnList?, selectedIndices: IntArray?) {
@@ -56,6 +58,7 @@ object Edit {
             JBytedit.INSTANCE.insnListModel!!.removeElementAt(it)
         }
         insnsToRemove.forEach { instructions!!.remove(it) }
+        JBytedit.INSTANCE.refreshFrames()
     }
 
     fun moveInsnBy(i: Int, instructions: InsnList, selectedIndex: Int) {
@@ -69,32 +72,19 @@ object Edit {
             catch (e: Exception) {
                 instructions.insert(instructions[selectedIndex - 1], node)
             }
-            var displayString = OpUtil.getDisplayInstruction(node)
-            if (node is LabelNode)
-                for (key in OpUtil.resolvedLabels.keys)
-                    displayString.replace(key.toString(), OpUtil.resolvedLabels[key].toString())
-            JBytedit.INSTANCE.insnListModel!!.add(selectedIndex, displayString)
+            JBytedit.INSTANCE.insnListModel!!.add(selectedIndex, InstructionItem(node))
         }
-        /*else if (selectedIndex == 1 && i == -1){
-            val node = instructions[selectedIndex + 1]
-            instructions.remove(node)
-            JBytedit.INSTANCE.insnListModel!!.removeElementAt(selectedIndex + 1)
-            instructions.insertBefore(instructions[selectedIndex], node)
-            var displayString = OpUtil.getDisplayInstruction(node)
-            if (node is LabelNode)
-                for (key in OpUtil.resolvedLabels.keys)
-                    displayString.replace(key.toString(), OpUtil.resolvedLabels[key].toString())
-            JBytedit.INSTANCE.insnListModel!!.add(selectedIndex, displayString)
-        }*/
+        JBytedit.INSTANCE.refreshFrames()
     }
 
-    fun insertOrReplaceInsn(source: AbstractInsnNode?, target: AbstractInsnNode?, instructions: InsnList, replace: Boolean){
-        JBytedit.INSTANCE.insnListModel!!.add(instructions.indexOf(target) + 1, OpUtil.getDisplayInstruction(source!!))
+    fun insertOrReplaceInsn(source: AbstractInsnNode, target: AbstractInsnNode?, instructions: InsnList, replace: Boolean){
+        JBytedit.INSTANCE.insnListModel!!.add(instructions.indexOf(target) + 1, InstructionItem(source))
         instructions.insert(target, source)
         if (replace){
             JBytedit.INSTANCE.insnListModel!!.removeElementAt(instructions.indexOf(target))
             instructions.remove(target)
         }
+        JBytedit.INSTANCE.refreshFrames()
     }
 
 }

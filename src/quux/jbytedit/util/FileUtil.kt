@@ -49,7 +49,7 @@ object FileUtil {
                 output.write(input)
                 output.closeEntry()
             } else {
-                output.putNextEntry(entry)
+                output.putNextEntry(JarEntry(entry.name))
                 val input = file.getInputStream(entry)
                 val bytes = ByteArray(1024)
                 while (true) {

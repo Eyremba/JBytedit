@@ -23,7 +23,7 @@ object TextUtil {
     }
 
     fun toHtml(str: String?): String {
-        return "<html>" + str
+        return "<html>" + toBlack(str)
     }
 
     fun addTag(str: String?, tag: String?): String {
@@ -32,11 +32,15 @@ object TextUtil {
     }
 
     fun toLighter(str: String?): String {
-        return toHtml(addTag(str, "font color=#999999"))
+        return addTag(str, "font color=#999999")
     }
 
     fun toBold(str: String?): String {
-        return toHtml(addTag(str, "b"))
+        return addTag(str, "b")
+    }
+
+    fun toBlack(str: String?): String {
+        return addTag(str, "font color=#000000")
     }
 
 }
