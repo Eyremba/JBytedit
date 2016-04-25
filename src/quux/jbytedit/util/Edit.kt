@@ -48,43 +48,43 @@ object Edit {
         val fieldsToRemove = ArrayList<Any?>()
         selectedIndices!!.forEach { fieldsToRemove.add(fields[it]) }
         fieldsToRemove.forEach { fields.remove(it) }
-        JBytedit.INSTANCE.refreshFrames()
+        JBytedit.refreshFrames()
     }
 
     fun removeInsns(instructions: InsnList?, selectedIndices: IntArray?) {
         val insnsToRemove = ArrayList<AbstractInsnNode>()
         selectedIndices!!.sorted().reversed().forEach {
             insnsToRemove.add(instructions!![it])
-            JBytedit.INSTANCE.insnListModel!!.removeElementAt(it)
+            JBytedit.insnListModel!!.removeElementAt(it)
         }
         insnsToRemove.forEach { instructions!!.remove(it) }
-        JBytedit.INSTANCE.refreshFrames()
+        JBytedit.refreshFrames()
     }
 
     fun moveInsnBy(i: Int, instructions: InsnList, selectedIndex: Int) {
         if (selectedIndex + i >= 0 && selectedIndex + i <= instructions.size() - 1) {
             val node = instructions[selectedIndex + i]
             instructions.remove(node)
-            JBytedit.INSTANCE.insnListModel!!.removeElementAt(selectedIndex + i)
+            JBytedit.insnListModel!!.removeElementAt(selectedIndex + i)
             try {
                 instructions.insertBefore(instructions[selectedIndex], node)
             }
             catch (e: Exception) {
                 instructions.insert(instructions[selectedIndex - 1], node)
             }
-            JBytedit.INSTANCE.insnListModel!!.add(selectedIndex, InstructionItem(node))
+            JBytedit.insnListModel!!.add(selectedIndex, InstructionItem(node))
         }
-        JBytedit.INSTANCE.refreshFrames()
+        JBytedit.refreshFrames()
     }
 
     fun insertOrReplaceInsn(source: AbstractInsnNode, target: AbstractInsnNode?, instructions: InsnList, replace: Boolean){
-        JBytedit.INSTANCE.insnListModel!!.add(instructions.indexOf(target) + 1, InstructionItem(source))
+        JBytedit.insnListModel!!.add(instructions.indexOf(target) + 1, InstructionItem(source))
         instructions.insert(target, source)
         if (replace){
-            JBytedit.INSTANCE.insnListModel!!.removeElementAt(instructions.indexOf(target))
+            JBytedit.insnListModel!!.removeElementAt(instructions.indexOf(target))
             instructions.remove(target)
         }
-        JBytedit.INSTANCE.refreshFrames()
+        JBytedit.refreshFrames()
     }
 
 }

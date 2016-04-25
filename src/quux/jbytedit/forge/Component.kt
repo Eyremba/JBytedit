@@ -78,7 +78,7 @@ object Component {
 
         tree.addTreeSelectionListener {
             val treeNode = it.path.lastPathComponent
-            JBytedit.INSTANCE.openNode(treeNode)
+            JBytedit.openNode(treeNode)
         }
 
         tree.addMouseListener(object : MouseAdapter() {
@@ -129,7 +129,7 @@ object Component {
         list.font = Font(Font.SANS_SERIF, Font.PLAIN, 13)
 
         list.addListSelectionListener {
-            JBytedit.INSTANCE.openFrameList(list.selectedIndex)
+            JBytedit.openFrameList(list.selectedIndex)
         }
 
         list.addMouseListener(object : MouseAdapter() {

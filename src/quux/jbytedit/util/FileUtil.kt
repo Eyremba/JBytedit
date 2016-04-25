@@ -23,7 +23,7 @@ object FileUtil {
         val fileChooser = JFileChooser()
         val filter = FileNameExtensionFilter("Jar files", "jar")
         fileChooser.fileFilter = filter
-        val returnVal = fileChooser.showOpenDialog(JBytedit.INSTANCE)
+        val returnVal = fileChooser.showOpenDialog(JBytedit)
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             if (fileChooser.selectedFile.extension.toLowerCase().equals("jar")) {
                 return fileChooser.selectedFile

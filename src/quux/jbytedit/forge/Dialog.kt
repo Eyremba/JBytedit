@@ -16,14 +16,14 @@ import javax.swing.*
 object Dialog {
 
     fun error(message: String) {
-        JOptionPane.showMessageDialog(JBytedit.INSTANCE,
+        JOptionPane.showMessageDialog(JBytedit,
                 message,
                 "Error",
                 JOptionPane.ERROR_MESSAGE)
     }
 
     fun confirm(message: String): Boolean {
-        return JOptionPane.showConfirmDialog(quux.jbytedit.JBytedit.INSTANCE,
+        return JOptionPane.showConfirmDialog(quux.jbytedit.JBytedit,
                 message,
                 "Confirmation needed", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION
     }
@@ -46,7 +46,7 @@ object Dialog {
         input.add(access)
         input.add(maxStack)
         input.add(maxLocals)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Edit Method",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Edit Method",
                 JOptionPane.OK_CANCEL_OPTION)
         try {
             if (result == JOptionPane.OK_OPTION) {
@@ -56,7 +56,7 @@ object Dialog {
                 node.maxLocals = Integer.parseInt(maxLocals.text)
             }
         } catch (e: Exception) {
-            JOptionPane.showMessageDialog(JBytedit.INSTANCE,
+            JOptionPane.showMessageDialog(JBytedit,
                     "An error occurred",
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
@@ -84,7 +84,7 @@ object Dialog {
         input.add(desc)
         input.add(sig)
         input.add(value)
-        val promptResult = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Add field", JOptionPane.YES_NO_OPTION)
+        val promptResult = JOptionPane.showConfirmDialog(JBytedit, panel, "Add field", JOptionPane.YES_NO_OPTION)
         if (promptResult == JOptionPane.YES_OPTION) {
             try {
                 val field = fieldNode ?: FieldNode(0, null, null, null, null)
@@ -126,7 +126,7 @@ object Dialog {
         labels.add(JLabel("ASM Access code: "))
         val code = JTextField(node.access.toString())
         input.add(code)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Edit Class",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Edit Class",
                 JOptionPane.OK_CANCEL_OPTION)
         try {
             if (result == JOptionPane.OK_OPTION) {
@@ -155,14 +155,14 @@ object Dialog {
         input.add(position)
         labels.add(JLabel("Type: "))
         input.add(type)
-        var result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert node",
+        var result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert node",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.YES_OPTION) {
             val modifiedIndex = index - (if (position.selectedItem.equals("Before")) 1 else 0)
             var target: AbstractInsnNode?
             if (modifiedIndex == -1) {
                 target = InsnNode(-1)
-                JBytedit.INSTANCE.insnListModel!!.add(0, BlankListItem())
+                JBytedit.insnListModel!!.add(0, BlankListItem())
                 method.instructions.insertBefore(method.instructions.first, target)
             } else {
                 target = method.instructions[modifiedIndex]
@@ -170,15 +170,15 @@ object Dialog {
             if (type.selectedItem == "LabelNode") {
                 val labelNode = LabelNode()
                 method.instructions.insert(target, labelNode)
-                JBytedit.INSTANCE.openMethod(method, parent, index)
+                JBytedit.openMethod(method, parent, index)
             } else {
                 abstractInsnEditor(type.selectedItem.toString(), target, method, false)
             }
             if (type.selectedItem == "LineNumberNode"){
-                JBytedit.INSTANCE.openMethod(method, parent, index)
+                JBytedit.openMethod(method, parent, index)
             }
             if (modifiedIndex == -1) {
-                JBytedit.INSTANCE.insnListModel!!.removeElementAt(method.instructions.indexOf(target))
+                JBytedit.insnListModel!!.removeElementAt(method.instructions.indexOf(target))
                 method.instructions.remove(target)
             }
         }
@@ -223,7 +223,7 @@ object Dialog {
         labels.add(JLabel("Increment by: "))
         val value = JTextField(if (node is IincInsnNode) node.incr.toString() else "")
         input.add(value)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Iinc Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Iinc Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             Edit.insertOrReplaceInsn(IincInsnNode(Integer.parseInt(index.text), Integer.parseInt(value.text)), node, method.instructions, edit)
@@ -238,7 +238,7 @@ object Dialog {
         labels.add(JLabel("Operand: "))
         val operand = JTextField(if (node is IntInsnNode) node.operand.toString() else "")
         labels.add(operand)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Int Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Int Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
@@ -268,7 +268,7 @@ object Dialog {
             }
         var label = JTextField(if (count == 0) "" else count.toString())
         input.add(label)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Jump Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Jump Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
@@ -300,7 +300,7 @@ object Dialog {
         labels.add(JLabel("Value: "))
         val value = JTextField(if (node is LdcInsnNode) node.cst.toString() else "")
         input.add(value)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert LDC Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert LDC Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             when (insn.selectedItem as String) {
@@ -316,7 +316,7 @@ object Dialog {
         labels.add(JLabel("Line number: "))
         var value = JTextField(lineNode?.line?.toString() ?: "")
         input.add(value)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Line Number",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Line Number",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             val label = LabelNode()
@@ -337,7 +337,7 @@ object Dialog {
         labels.add(JLabel("Type description: "))
         val desc = JTextField(if (node is TypeInsnNode) node.desc else "")
         input.add(desc)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Type Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Type Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
@@ -354,7 +354,7 @@ object Dialog {
         labels.add(JLabel("Local variable index: "))
         val index = JTextField(if (node is VarInsnNode) node.`var`.toString() else "")
         input.add(index)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Var Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Var Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
@@ -377,7 +377,7 @@ object Dialog {
         labels.add(JLabel("Description: "))
         val desc = JTextField(fieldInsnNode?.desc ?: "")
         input.add(desc)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Field Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Field Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
@@ -400,7 +400,7 @@ object Dialog {
         labels.add(JLabel("Description: "))
         val desc = JTextField(methodNode?.desc ?: "")
         input.add(desc)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Method Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Method Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
@@ -430,7 +430,7 @@ object Dialog {
                 "arraylength", "athrow", "monitorenter", "monitorexit"))
         insn.selectedItem = OpUtil.mnemonics[node?.opcode ?: 0]
         input.add(insn)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Insert Instruction",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Insert Instruction",
                 JOptionPane.OK_CANCEL_OPTION)
         if (result == JOptionPane.OK_OPTION) {
             var opcode = OpUtil.opcodes[insn.selectedItem as String]!!
@@ -450,7 +450,7 @@ object Dialog {
         input.add(text)
         val checkbox = JCheckBox("Match case", false)
         panel.add(checkbox, BorderLayout.SOUTH)
-        val result = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Search String",
+        val result = JOptionPane.showConfirmDialog(JBytedit, panel, "Search String",
                 JOptionPane.OK_CANCEL_OPTION)
         try {
             if (result == JOptionPane.OK_OPTION) {
@@ -486,11 +486,11 @@ object Dialog {
                         }
                     }
                 }
-                JBytedit.INSTANCE.openResults(Component.resultsList(results))
+                JBytedit.openResults(Component.resultsList(results))
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            JOptionPane.showMessageDialog(JBytedit.INSTANCE,
+            JOptionPane.showMessageDialog(JBytedit,
                     "An error occurred",
                     "Error",
                     JOptionPane.ERROR_MESSAGE);

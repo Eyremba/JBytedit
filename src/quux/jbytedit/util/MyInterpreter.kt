@@ -122,7 +122,9 @@ class MyInterpreter: Interpreter(327680), Opcodes {
             47, 97, 101, 105, 109, 113, 121, 123, 125, 127, 129, 131 -> return BasicValue.LONG_VALUE
             48, 98, 102, 106, 110, 114 -> return BasicValue.FLOAT_VALUE
             49, 99, 103, 107, 111, 115 -> return BasicValue.DOUBLE_VALUE
-            50 -> return BasicValue.REFERENCE_VALUE
+            50 -> {
+                return BasicValue((var2 as BasicValue).type.elementType)
+            }
             148, 149, 150, 151, 152 -> return BasicValue.INT_VALUE
             159, 160, 161, 162, 163, 164, 165, 166, 181 -> return null
             else -> throw Error("internal error")

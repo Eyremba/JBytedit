@@ -25,12 +25,8 @@ import java.awt.event.WindowEvent
 import java.util.jar.JarFile
 import javax.swing.*
 
-class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
-
-    companion object {
-        lateinit var INSTANCE: JBytedit
-        val version = "v0.3.0"
-    }
+object JBytedit : JFrame("JBytedit ${JBytedit.version}") {
+    const val version = "v0.3.0"
 
     lateinit var treePane: JScrollPane
     lateinit var editorPane: JScrollPane
@@ -43,14 +39,14 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
     lateinit var titleLabel: JLabel
     var frames: Array<Frame> = arrayOf()
 
-    init {
-        INSTANCE = this
+    @JvmStatic fun main(args: Array<String>) {
 
         UIManager.getInstalledLookAndFeels().firstOrNull { it.name.equals("Nimbus") }?.let { UIManager.setLookAndFeel(it.className) }
+
         defaultCloseOperation = DO_NOTHING_ON_CLOSE
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent?) {
-                val promptResult = JOptionPane.showConfirmDialog(quux.jbytedit.JBytedit.INSTANCE,
+                val promptResult = JOptionPane.showConfirmDialog(quux.jbytedit.JBytedit,
                         "Are you sure you want to exit?\nAll unsaved changes will be lost",
                         "Confirmation needed", JOptionPane.YES_NO_OPTION)
                 if (promptResult == JOptionPane.YES_OPTION) {
@@ -165,21 +161,22 @@ class JBytedit : JFrame("JBytedit ${JBytedit.version}") {
     }
 
     fun openFrameList(index: Int) {
-        stackAnalysisPane.viewport.removeAll()
-        val frame = frames[index]
+        try {
+            val frame = frames[index]
 
-        fun toStr(value: BasicValue): String {
-            return TextUtil.toHtml(if (value == BasicValue.UNINITIALIZED_VALUE) ""
-            else if (value == BasicValue.RETURNADDRESS_VALUE) "Return Address"
-            else if (value == BasicValue.REFERENCE_VALUE) "Object Reference"
-            else OpUtil.getDisplayType(value.type.descriptor))
-        }
+            fun toStr(value: BasicValue, prefix: String = ""): String {
+                return TextUtil.toHtml(prefix + if (value == BasicValue.UNINITIALIZED_VALUE) "Uninitialized"
+                else if (value == BasicValue.RETURNADDRESS_VALUE) "Return Address"
+                else OpUtil.getDisplayType(value.type.descriptor))
+            }
 
-        val stack = Array(frame.stackSize) {toStr(frame.getStack(it) as BasicValue)}
-        val locals = Array(frame.locals) {toStr(frame.getLocal(it) as BasicValue)}
-        stackAnalysisPane.viewport.add(JList(arrayOf(
-                TextUtil.toHtml(TextUtil.toBold("Current stack")), *stack,
-                TextUtil.toHtml(TextUtil.toBold("Current locals")), *locals)))
+            val locals = Array(frame.locals) { toStr(frame.getLocal(it) as BasicValue, "$it - ") }
+            val stack = Array(frame.stackSize) { toStr(frame.getStack(it) as BasicValue) }
+            stackAnalysisPane.viewport.removeAll()
+            stackAnalysisPane.viewport.add(JList(arrayOf(
+                    TextUtil.toHtml(TextUtil.toBold("Current locals")), *locals,
+                    TextUtil.toHtml(TextUtil.toBold("Current stack")), *stack)))
+        } catch (e: NullPointerException) {}
     }
 
     fun refreshFrames() {

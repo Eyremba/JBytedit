@@ -32,7 +32,7 @@ object Menu {
             }
             FileUtil.selectedJar = FileUtil.selectJar() ?: return@addActionListener
             try {
-                JBytedit.INSTANCE.openJar(JarFile(FileUtil.selectedJar))
+                JBytedit.openJar(JarFile(FileUtil.selectedJar))
             } catch (e: Exception) {
                 Dialog.error("There was an error while opening the selected file!")
             }
@@ -88,7 +88,7 @@ object Menu {
                             for (methodNode in owner.methods){
                                 if (methodNode is MethodNode && methodNode.name.equals(insn.name)
                                         && methodNode.desc.equals(insn.desc))
-                                    JBytedit.INSTANCE.openMethod(methodNode, owner, list.selectedIndex)
+                                    JBytedit.openMethod(methodNode, owner, list.selectedIndex)
                             }
                     }
                     popup.add(declaration)
@@ -99,7 +99,7 @@ object Menu {
                     declaration.addActionListener {
                         val owner = FileUtil.classes[insn.owner]
                         if (owner != null)
-                            JBytedit.INSTANCE.openClass(owner)
+                            JBytedit.openClass(owner)
                     }
                     popup.add(declaration)
                 }
@@ -121,7 +121,7 @@ object Menu {
                                     i++
                                 }
                             }
-                        JBytedit.INSTANCE.openResults(Component.resultsList(resultList))
+                        JBytedit.openResults(Component.resultsList(resultList))
                     }
                     popup.add(findUsages)
                 }
@@ -143,7 +143,7 @@ object Menu {
                                     i++
                                 }
                             }
-                        JBytedit.INSTANCE.openResults(Component.resultsList(resultList))
+                        JBytedit.openResults(Component.resultsList(resultList))
                     }
                     popup.add(findUsages)
                 }
@@ -183,7 +183,7 @@ object Menu {
             popup.add(remove)
         }
 
-        popup.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
+        popup.show(JBytedit, JBytedit.mousePosition.x, JBytedit.mousePosition.y)
     }
 
     fun fieldsPopup(classNode: ClassNode, list: JList<String>) {
@@ -194,7 +194,7 @@ object Menu {
             remove.addActionListener {
                 if (Dialog.confirm("Are you sure you want to remove these fields?")) {
                     Edit.removeFields(classNode.fields, list.selectedIndices)
-                    JBytedit.INSTANCE.openClass(classNode)
+                    JBytedit.openClass(classNode)
                 }
             }
             popup.add(remove)
@@ -203,17 +203,17 @@ object Menu {
             val edit = JMenuItem("Edit")
             edit.addActionListener {
                 Dialog.fieldEditor(classNode, classNode.fields[list.selectedIndex] as FieldNode)
-                JBytedit.INSTANCE.openClass(classNode)
+                JBytedit.openClass(classNode)
             }
             popup.add(edit)
         }
         val add = JMenuItem("Add")
         add.addActionListener {
             Dialog.fieldEditor(classNode, null)
-            JBytedit.INSTANCE.openClass(classNode)
+            JBytedit.openClass(classNode)
         }
         popup.add(add)
-        popup.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
+        popup.show(JBytedit, JBytedit.mousePosition.x, JBytedit.mousePosition.y)
     }
 
     fun fileTreePopup(tree: JTree) {
@@ -254,7 +254,7 @@ object Menu {
                 popup.add(edit)
             }
 
-            popup.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
+            popup.show(JBytedit, JBytedit.mousePosition.x, JBytedit.mousePosition.y)
         }
     }
 
@@ -265,7 +265,7 @@ object Menu {
                 if (list.selectedValue.methodNode != null){
                     val clear = JMenuItem("Go to Method")
                     clear.addActionListener {
-                        JBytedit.INSTANCE.openMethod(list.selectedValue.methodNode!!, list.selectedValue.classNode!!,
+                        JBytedit.openMethod(list.selectedValue.methodNode!!, list.selectedValue.classNode!!,
                                 list.selectedValue.methodNode!!.instructions.indexOf(list.selectedValue.insnNode))
                     }
                     popup.add(clear)
@@ -274,7 +274,7 @@ object Menu {
                     val clear = JMenuItem("Open Class")
                     clear.addActionListener {
                         val classNode = list.selectedValue.classNode
-                        JBytedit.INSTANCE.openClass(classNode)
+                        JBytedit.openClass(classNode)
                     }
                     popup.add(clear)
                 }
@@ -288,15 +288,15 @@ object Menu {
                     panel.add(JLabel("Are you sure you want to clear the content of these methods?"))
                     var checkbox = JCheckBox("Ignore <init> and <clinit> methods", true)
                     panel.add(checkbox)
-                    val promptResult = JOptionPane.showConfirmDialog(JBytedit.INSTANCE, panel, "Confirmation needed", JOptionPane.YES_NO_OPTION)
+                    val promptResult = JOptionPane.showConfirmDialog(JBytedit, panel, "Confirmation needed", JOptionPane.YES_NO_OPTION)
                     if (promptResult == JOptionPane.YES_OPTION)
                         for (value in list.selectedValuesList){
-                            JBytedit.INSTANCE.rootNode!!.getChild(value.classNode!!.name + "/" + value.methodNode!!.name)!!.clear(checkbox.isSelected)
+                            JBytedit.rootNode!!.getChild(value.classNode!!.name + "/" + value.methodNode!!.name)!!.clear(checkbox.isSelected)
                         }
                 }
                 popup.add(clear)
             }
-            popup.show(JBytedit.INSTANCE, JBytedit.INSTANCE.mousePosition.x, JBytedit.INSTANCE.mousePosition.y)
+            popup.show(JBytedit, JBytedit.mousePosition.x, JBytedit.mousePosition.y)
         }
     }
 
