@@ -59,6 +59,7 @@ object FileUtil {
                     }
                     output.write(bytes, 0, count)
                 }
+                println(entry.name)
                 output.closeEntry()
             }
         }

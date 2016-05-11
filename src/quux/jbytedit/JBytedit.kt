@@ -176,7 +176,7 @@ object JBytedit : JFrame("JBytedit ${JBytedit.version}") {
             stackAnalysisPane.viewport.add(JList(arrayOf(
                     TextUtil.toHtml(TextUtil.toBold("Current locals")), *locals,
                     TextUtil.toHtml(TextUtil.toBold("Current stack")), *stack)))
-        } catch (e: NullPointerException) {}
+        } catch (e: Exception) {}
     }
 
     fun refreshFrames() {
